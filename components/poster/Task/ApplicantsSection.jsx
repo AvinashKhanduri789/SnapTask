@@ -1,0 +1,252 @@
+// components/poster/task-detail/ApplicantsSection.jsx
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+
+const ApplicantsSection = ({ applicants }) => {
+  const [selectedApplicants, setSelectedApplicants] = useState([]);
+
+  const handleApplicantAction = (applicantId, action) => {
+    if (action === 'accept') {
+      setSelectedApplicants(prev => [...prev.filter(id => id !== applicantId), applicantId]);
+    } else if (action === 'reject') {
+      setSelectedApplicants(prev => prev.filter(id => id !== applicantId));
+    }
+  };
+
+  const isAccepted = (applicantId) => selectedApplicants.includes(applicantId);
+  const isRejected = (applicantId) => false; // You can implement rejection logic
+
+  return (
+    <View style={{
+      backgroundColor: '#ffffff',
+      borderRadius: 20,
+      padding: 20,
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 5
+    }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Text style={{
+          fontSize: 18,
+          fontWeight: '700',
+          color: '#1f2937'
+        }}>
+          Applicants ({applicants.length})
+        </Text>
+        
+        <Text style={{
+          fontSize: 14,
+          color: '#6366F1',
+          fontWeight: '600'
+        }}>
+          View All
+        </Text>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 16 }}>
+          {applicants.map((applicant) => (
+            <View key={applicant.id} style={{
+              width: 300, // Slightly wider for better content display
+              borderRadius: 18, // Slightly larger border radius
+              padding: 18,
+              overflow: 'hidden', // Ensure content respects border radius
+              position: 'relative',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 8,
+              elevation: 3,
+              backgroundColor: isAccepted(applicant.id) ? 'rgba(16, 185, 129, 0.05)' : 
+                              isRejected(applicant.id) ? 'rgba(239, 68, 68, 0.05)' : '#ffffff',
+              borderWidth: 2,
+              borderColor: isAccepted(applicant.id) ? 'rgba(16, 185, 129, 0.3)' : 
+                           isRejected(applicant.id) ? 'rgba(239, 68, 68, 0.3)' : 'rgba(229, 231, 235, 0.8)'
+            }}>
+              {/* Status indicator */}
+              {(isAccepted(applicant.id) || isRejected(applicant.id)) && (
+                <View style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderBottomLeftRadius: 12,
+                  backgroundColor: isAccepted(applicant.id) ? '#10B981' : '#EF4444'
+                }}>
+                  <Text style={{ 
+                    color: '#fff', 
+                    fontSize: 10, 
+                    fontWeight: '800',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}>
+                    {isAccepted(applicant.id) ? 'Selected' : 'Rejected'}
+                  </Text>
+                </View>
+              )}
+            
+              {/* Applicant Header */}
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                marginBottom: 14,
+                paddingTop: isAccepted(applicant.id) || isRejected(applicant.id) ? 10 : 0
+              }}>
+                <LinearGradient
+                  colors={['#6366F1', '#3B82F6']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 14,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 14,
+                    shadowColor: '#6366F1',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                    elevation: 4
+                  }}
+                >
+                  <Text style={{ 
+                    fontSize: 18, 
+                    fontWeight: '800', 
+                    color: '#ffffff',
+                    textTransform: 'uppercase'
+                  }}>
+                    {applicant.avatar}
+                  </Text>
+                </LinearGradient>
+                
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <Text style={{ 
+                    fontSize: 16, 
+                    fontWeight: '700', 
+                    color: '#111827',
+                    marginBottom: 2
+                  }}>
+                    {applicant.name}
+                  </Text>
+                  <Text style={{ 
+                    fontSize: 13, 
+                    color: '#6b7280', 
+                    lineHeight: 18 
+                  }}>
+                    {applicant.tagline}
+                  </Text>
+                </View>
+                
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(245, 158, 11, 0.2)'
+                }}>
+                  <Ionicons name="star" size={14} color="#F59E0B" />
+                  <Text style={{ 
+                    fontSize: 13, 
+                    fontWeight: '700', 
+                    color: '#92400E',
+                    marginLeft: 4 
+                  }}>
+                    {applicant.rating}
+                  </Text>
+                </View>
+              </View>
+            
+              {/* Action Buttons */}
+              <View style={{ 
+                flexDirection: 'row', 
+                gap: 10,
+                marginTop: 16
+              }}>
+                <TouchableOpacity 
+                  style={{ flex: 1 }}
+                  onPress={() => handleApplicantAction(applicant.id, 'view')}
+                  activeOpacity={0.8}
+                >
+                  <View style={{
+                    backgroundColor: '#ffffff',
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    borderWidth: 1.5,
+                    borderColor: '#e5e7eb',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 6
+                  }}>
+                    <Ionicons name="person-outline" size={16} color="#4B5563" />
+                    <Text style={{ 
+                      fontSize: 14, 
+                      fontWeight: '600', 
+                      color: '#374151' 
+                    }}>
+                      Profile
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={{ flex: 1.2 }}
+                  onPress={() => handleApplicantAction(applicant.id, 'accept')}
+                  activeOpacity={0.9}
+                >
+                  <LinearGradient
+                    colors={isAccepted(applicant.id) ? 
+                      ['#10B981', '#059669'] : 
+                      ['#4F46E5', '#6366F1']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'row',
+                      gap: 6,
+                      shadowColor: isAccepted(applicant.id) ? '#10B981' : '#4F46E5',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      elevation: 4
+                    }}
+                  >
+                    <Ionicons 
+                      name={isAccepted(applicant.id) ? "checkmark-done" : "checkmark"} 
+                      size={16} 
+                      color="#ffffff" 
+                    />
+                    <Text style={{ 
+                      fontSize: 14, 
+                      fontWeight: '600', 
+                      color: '#ffffff',
+                      marginLeft: 2
+                    }}>
+                      {isAccepted(applicant.id) ? 'Accepted' : 'Accept'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
+export default ApplicantsSection;

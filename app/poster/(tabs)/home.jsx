@@ -1,0 +1,50 @@
+import { ScrollView, View, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import HeaderSection from "../../../components/poster/home/HeaderSection ";
+import QuickActionCard from '../../../components/poster/home/QuickActionCard ';
+import TaskTabs from '../../../components/poster/home/TaskTabs ';
+import TaskList from '../../../components/poster/home/TaskList ';
+import InsightsCard from '../../../components/poster/home/InsightsCard ';
+import { useState } from 'react';
+const Home = () => {
+  const [activeTab, setActiveTab] = useState('active');
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Simulate API call
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
+  
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    // debounce here for API calls
+    // console.log('Searching for:', query);
+  };
+  return (
+    <>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+
+          <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+            <HeaderSection />
+            <QuickActionCard />
+            <TaskTabs activeTab={activeTab} onTabChange={setActiveTab}/>
+            <TaskList activeTab={activeTab}  searchQuery={searchQuery}  />
+            <InsightsCard />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+
+    </>
+  )
+}
+
+export default Home;
