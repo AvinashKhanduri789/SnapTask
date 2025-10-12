@@ -1,14 +1,1 @@
-import { Text, View } from "react-native"
-const Tasks = ()=>{
-    return (
-        <>
-            <View>
-                <Text className="text-2xl font-bold text-center mt-5">
-                    Tasks
-                </Text>
-            </View>
-        </>
-    )
-}
-
-export default Tasks;
+import React, { useState } from 'react';import { View, StyleSheet } from 'react-native';import { SafeAreaView } from 'react-native-safe-area-context';import TasksHeader from '../../../components/poster/TaskPageComponents/TasksHeader';import TabSwitcher from '../../../components/poster/TaskPageComponents/TabSwitcher';import PendingTasks from "../../../components/poster/TaskPageComponents/PendingTasks";import CompletedTasks from "../../../components/poster/TaskPageComponents/CompletedTasks";import NewTaskBottomSheet from "../../../components/poster/TaskPageComponents/NewTaskBottomSheet";const Tasks = () => {  const [activeTab, setActiveTab] = useState('pending');  const [showBottomSheet, setShowBottomSheet] = useState(false);  const handleTabChange = (tabId) => {    if (tabId === 'new') {      setShowBottomSheet(true);    } else {      setActiveTab(tabId);    }  };  const handleCloseBottomSheet = () => {    setShowBottomSheet(false);    setActiveTab('pending');  };  const handleTaskCreated = () => {    setShowBottomSheet(false);    setActiveTab('pending');  };  const renderContent = () => {    switch (activeTab) {      case 'pending':        return <PendingTasks />;      case 'completed':        return <CompletedTasks />;      default:        return <PendingTasks />;    }  };  return (    <>      <SafeAreaView style={styles.container}>        <TasksHeader />        <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />        <View style={styles.content}>          {renderContent()}        </View>      </SafeAreaView>      {/* Custom Bottom Sheet for New Task Form */}      <NewTaskBottomSheet        visible={showBottomSheet}        onClose={handleCloseBottomSheet}        onTaskCreated={handleTaskCreated}      />    </>  )}const styles = StyleSheet.create({  container: {    flex: 1,    backgroundColor: '#f8fafc',  },  content: {    flex: 1,  },});export default Tasks;

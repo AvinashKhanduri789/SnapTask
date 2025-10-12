@@ -1,42 +1,1 @@
-import { Stack, useRouter } from "expo-router";
-import { createContext, useContext, useEffect, useState } from "react";
-import '../global.css';
-
-const AuthContext = createContext(undefined);
-
-const GlobalAuthState = ({ children }) => {
-  const [userData, setUserData] = useState({
-    email: "khanduria11@gmail.com",
-    password: "123456",
-    role: "POSTER",
-    username: "avinash.khanduri",
-  });
-  return (
-    <AuthContext.Provider value={{userData}}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-const AuthGate = () => {
-  const router = useRouter();
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      router.replace('/auth/login');
-    });
-    return () => cancelAnimationFrame(id);
-  }, [router]);
-  return null;
-};
-
-export default function RootLayout() {
-  return (
-    <GlobalAuthState>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-      </Stack>
-      <AuthGate />
-    </GlobalAuthState>
-  )
-}
-
+import { Stack, useRouter } from "expo-router";import { createContext, useContext, useEffect, useState } from "react";import { GestureHandlerRootView } from 'react-native-gesture-handler';import '../global.css';const AuthContext = createContext(undefined);const GlobalAuthState = ({ children }) => {  const [userData, setUserData] = useState({    email: "khanduria11@gmail.com",    password: "123456",    role: "POSTER",    username: "avinash.khanduri",  });  return (    <AuthContext.Provider value={{userData}}>      {children}    </AuthContext.Provider>  );};const AuthGate = () => {  const router = useRouter();  useEffect(() => {    const id = requestAnimationFrame(() => {      router.replace('/auth/login');    });    return () => cancelAnimationFrame(id);  }, [router]);  return null;};export default function RootLayout() {  return (    <GestureHandlerRootView>    <GlobalAuthState>      <Stack screenOptions={{ headerShown: false }}>        <Stack.Screen name="index" />      </Stack>      <AuthGate />    </GlobalAuthState>    </GestureHandlerRootView>  )}

@@ -1,6 +1,1 @@
-import { Tabs } from "expo-router";
-<Tabs>
-  <Tabs.Screen name="tasks" options={{ title: "Tasks" }} />
-  <Tabs.Screen name="notifications" options={{ title: "Notifications" }} />
-  <Tabs.Screen name="profile" options={{ title: "My Profile" }} />
-</Tabs>
+import { Tabs } from "expo-router";<Tabs>  <Tabs.Screen name="tasks" options={{ title: "Tasks" }} />  <Tabs.Screen name="notifications" options={{ title: "Notifications" }} />  <Tabs.Screen name="profile" options={{ title: "My Profile" }} /></Tabs>

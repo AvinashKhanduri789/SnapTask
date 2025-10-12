@@ -1,41 +1,1 @@
-// components/poster/InsightsCard.jsx
-import React from 'react';
-import { View, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-
-const InsightsCard = () => {
-  return (
-    <View style={{ marginBottom: 32 }}>
-      <LinearGradient
-        colors={['#f8fafc', '#f1f5f9']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          borderRadius: 16,
-          padding: 20,
-          borderWidth: 1,
-          borderColor: '#e2e8f0'
-        }}
-      >
-        <Text style={{ 
-          fontSize: 16, 
-          fontWeight: '600', 
-          color: '#1f2937',
-          marginBottom: 8 
-        }}>
-          📈 Your Progress This Month
-        </Text>
-        <Text style={{ 
-          fontSize: 14, 
-          color: '#6b7280',
-          lineHeight: 20 
-        }}>
-          You've posted <Text style={{ fontWeight: '700', color: '#6366F1' }}>12 tasks</Text> this month — 
-          great progress! 🚀 Keep it up by adding clear descriptions to get more quality bids.
-        </Text>
-      </LinearGradient>
-    </View>
-  );
-};
-
-export default InsightsCard;
+import React from 'react';import { View, Text } from 'react-native';import { LinearGradient } from 'expo-linear-gradient';const InsightsCard = () => {  return (    <View style={{ marginBottom: 32 }}>      <LinearGradient        colors={['#f8fafc', '#f1f5f9']}        start={{ x: 0, y: 0 }}        end={{ x: 1, y: 1 }}        style={{          borderRadius: 16,          padding: 20,          borderWidth: 1,          borderColor: '#e2e8f0'        }}      >        <Text style={{           fontSize: 16,           fontWeight: '600',           color: '#1f2937',          marginBottom: 8         }}>          📈 Your Progress This Month        </Text>        <Text style={{           fontSize: 14,           color: '#6b7280',          lineHeight: 20         }}>          You've posted <Text style={{ fontWeight: '700', color: '#6366F1' }}>12 tasks</Text> this month —           great progress! 🚀 Keep it up by adding clear descriptions to get more quality bids.        </Text>      </LinearGradient>    </View>  );};export default InsightsCard;

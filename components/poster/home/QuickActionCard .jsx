@@ -1,57 +1,1 @@
-// components/poster/QuickActionCard.jsx
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-
-const QuickActionCard = () => {
-  return (
-    <TouchableOpacity style={{ marginBottom: 24 }}>
-      <LinearGradient
-        colors={['#6366F1', '#3B82F6']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          borderRadius: 16,
-          padding: 20,
-          shadowColor: '#6366F1',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
-          shadowRadius: 16,
-          elevation: 8
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ 
-              fontSize: 18, 
-              fontWeight: '700', 
-              color: '#ffffff',
-              marginBottom: 4 
-            }}>
-              Create New Task
-            </Text>
-            <Text style={{ 
-              fontSize: 14, 
-              color: 'rgba(255,255,255,0.8)' 
-            }}>
-              Get help with your projects instantly
-            </Text>
-          </View>
-          <View style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Ionicons name="add" size={24} color="#ffffff" />
-          </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-};
-
-export default QuickActionCard;
+import React from 'react';import { View, Text, TouchableOpacity } from 'react-native';import { LinearGradient } from 'expo-linear-gradient';import { Ionicons } from '@expo/vector-icons';const QuickActionCard = () => {  return (    <TouchableOpacity style={{ marginBottom: 24 }}>      <LinearGradient        colors={['#6366F1', '#3B82F6']}        start={{ x: 0, y: 0 }}        end={{ x: 1, y: 0 }}        style={{          borderRadius: 16,          padding: 20,          shadowColor: '#6366F1',          shadowOffset: { width: 0, height: 8 },          shadowOpacity: 0.3,          shadowRadius: 16,          elevation: 8        }}      >        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>          <View style={{ flex: 1 }}>            <Text style={{               fontSize: 18,               fontWeight: '700',               color: '#ffffff',              marginBottom: 4             }}>              Create New Task            </Text>            <Text style={{               fontSize: 14,               color: 'rgba(255,255,255,0.8)'             }}>              Get help with your projects instantly            </Text>          </View>          <View style={{            width: 44,            height: 44,            borderRadius: 12,            backgroundColor: 'rgba(255,255,255,0.2)',            alignItems: 'center',            justifyContent: 'center'          }}>            <Ionicons name="add" size={24} color="#ffffff" />          </View>        </View>      </LinearGradient>    </TouchableOpacity>  );};export default QuickActionCard;
