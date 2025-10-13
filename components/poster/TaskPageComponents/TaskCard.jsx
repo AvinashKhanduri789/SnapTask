@@ -1,1 +1,141 @@
-import React from 'react';import { View, Text, TouchableOpacity } from 'react-native';import { LinearGradient } from 'expo-linear-gradient';import { Ionicons } from '@expo/vector-icons';const TaskCard = ({ task, type }) => {  const getStatusGradient = (status) => {    switch (status) {      case 'pending':        return ['#F59E0B', '#D97706'];      case 'completed':        return ['#10B981', '#059669'];      default:        return ['#6B7280', '#4B5563'];    }  };  const getStatusIcon = (status) => {    switch (status) {      case 'pending':        return 'time';      case 'completed':        return 'checkmark-circle';      default:        return 'help-circle';    }  };  return (    <TouchableOpacity       className="bg-white rounded-2xl mb-4 overflow-hidden"      style={{        shadowColor: '#000',        shadowOffset: { width: 0, height: 6 },        shadowOpacity: 0.1,        shadowRadius: 16,        elevation: 8,      }}    >      {/* Top Gradient Bar */}      <LinearGradient        colors={getStatusGradient(task.status)}        start={{ x: 0, y: 0 }}        end={{ x: 1, y: 0 }}        className="h-1 w-full"      />      <View className="p-5">        {/* Header with Status */}        <View className="flex-row justify-between items-start mb-3">          <View className="flex-1">            <Text className="text-lg font-bold text-slate-800 mb-2 leading-6">              {task.title}            </Text>          </View>          {/* Status Badge - Perfectly Rounded */}          <LinearGradient            colors={getStatusGradient(task.status)}            start={{ x: 0, y: 0 }}            end={{ x: 1, y: 0 }}            className="px-4 py-2.5 rounded-full flex-row items-center"          >            <Ionicons name={getStatusIcon(task.status)} size={16} color="#ffffff" />            <Text className="text-white text-xs font-bold ml-2 uppercase">              {task.status}            </Text>          </LinearGradient>        </View>        {/* Metadata with Icons */}        <View className="mb-4 space-y-2">          <View className="flex-row items-center">            <View className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center">              <Ionicons name="calendar" size={16} color="#6B7280" />            </View>            <Text className="text-slate-500 text-sm ml-3">              Created: {task.createdAt}            </Text>          </View>          {task.deadline && (            <View className="flex-row items-center">              <View className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center">                <Ionicons name="hourglass" size={16} color="#6B7280" />              </View>              <Text className="text-slate-500 text-sm ml-3">                Deadline: {task.deadline}              </Text>            </View>          )}          {task.completedAt && (            <View className="flex-row items-center">              <View className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center">                <Ionicons name="checkmark-done" size={16} color="#6B7280" />              </View>              <Text className="text-slate-500 text-sm ml-3">                Completed: {task.completedAt}              </Text>            </View>          )}        </View>        {/* Footer with Budget and Actions */}        <View className="flex-row justify-between items-center">          {/* Budget with Beautiful Rounded Icon */}          <View className="flex-row items-center">            <LinearGradient              colors={['#10B981', '#059669']}              start={{ x: 0, y: 0 }}              end={{ x: 1, y: 0 }}              className="w-12 h-12 rounded-full items-center justify-center shadow-lg shadow-emerald-200"            >              <Ionicons name="wallet" size={20} color="#ffffff" />            </LinearGradient>            <Text className="text-lg font-bold text-emerald-600 ml-3">              {task.budget}            </Text>          </View>          {/* Action Buttons - Well Rounded */}          <View className="flex-row gap-3">            <TouchableOpacity className="bg-blue-500 px-5 py-3 rounded-xl">              <Text className="text-white text-sm font-semibold">                View Details              </Text>            </TouchableOpacity>            {type === 'pending' && (              <TouchableOpacity className="bg-slate-100 px-4 py-3 rounded-xl border border-slate-200">                <Text className="text-slate-700 text-sm font-semibold">                  Seekers                </Text>              </TouchableOpacity>            )}            {type === 'completed' && (              <TouchableOpacity className="bg-amber-100 px-4 py-3 rounded-xl">                <Text className="text-amber-700 text-sm font-semibold">                  ⭐ Review                </Text>              </TouchableOpacity>            )}          </View>        </View>      </View>    </TouchableOpacity>  );};export default TaskCard;
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+const TaskCard = ({ task, type }) => {
+  const router = useRouter();
+  const getStatusGradient = (status) => {
+    switch (status) {
+      case 'pending':
+        return ['#F59E0B', '#D97706'];
+      case 'completed':
+        return ['#10B981', '#059669'];
+      default:
+        return ['#6B7280', '#4B5563'];
+    }
+  };
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'time';
+      case 'completed':
+        return 'checkmark-circle';
+      default:
+        return 'help-circle';
+    }
+  };
+  return (
+    <TouchableOpacity 
+      className="bg-white rounded-2xl mb-4 overflow-hidden"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 16,
+        elevation: 8,
+      }}
+    >
+      {/* Top Gradient Bar */}
+      <LinearGradient
+        colors={getStatusGradient(task.status)}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="h-1 w-full"
+      />
+      <View className="p-5">
+        {/* Header with Status */}
+        <View className="flex-row justify-between items-start mb-3">
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-slate-800 mb-2 leading-6">
+              {task.title}
+            </Text>
+          </View>
+          {/* Status Badge - Perfectly Rounded */}
+          <LinearGradient
+            colors={getStatusGradient(task.status)}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="px-4 py-2.5 rounded-full flex-row items-center"
+          >
+            <Ionicons name={getStatusIcon(task.status)} size={16} color="#ffffff" />
+            <Text className="text-white text-xs font-bold ml-2 uppercase">
+              {task.status}
+            </Text>
+          </LinearGradient>
+        </View>
+        {/* Metadata with Icons */}
+        <View className="mb-4 space-y-2">
+          <View className="flex-row items-center">
+            <View className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center">
+              <Ionicons name="calendar" size={16} color="#6B7280" />
+            </View>
+            <Text className="text-slate-500 text-sm ml-3">
+              Created: {task.createdAt}
+            </Text>
+          </View>
+          {task.deadline && (
+            <View className="flex-row items-center">
+              <View className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center">
+                <Ionicons name="hourglass" size={16} color="#6B7280" />
+              </View>
+              <Text className="text-slate-500 text-sm ml-3">
+                Deadline: {task.deadline}
+              </Text>
+            </View>
+          )}
+          {task.completedAt && (
+            <View className="flex-row items-center">
+              <View className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center">
+                <Ionicons name="checkmark-done" size={16} color="#6B7280" />
+              </View>
+              <Text className="text-slate-500 text-sm ml-3">
+                Completed: {task.completedAt}
+              </Text>
+            </View>
+          )}
+        </View>
+        {/* Footer with Budget and Actions */}
+        <View className="flex-row justify-between items-center">
+          {/* Budget with Beautiful Rounded Icon */}
+          <View className="flex-row items-center">
+            <LinearGradient
+              colors={['#10B981', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="w-12 h-12 rounded-full items-center justify-center shadow-lg shadow-emerald-200"
+            >
+              <Ionicons name="wallet" size={20} color="#ffffff" />
+            </LinearGradient>
+            <Text className="text-lg font-bold text-emerald-600 ml-3">
+              {task.budget}
+            </Text>
+          </View>
+          {/* Action Buttons - Well Rounded */}
+          <View className="flex-row gap-3">
+            <TouchableOpacity onPress={() => router.push(`/poster/tasks/${task.id}`)} className="bg-blue-500 px-5 py-3 rounded-xl">
+              <Text className="text-white text-sm font-semibold">
+                View Details
+              </Text>
+            </TouchableOpacity>
+            {/* {type === 'pending' && (
+              <TouchableOpacity className="bg-slate-100 px-4 py-3 rounded-xl border border-slate-200">
+                <Text className="text-slate-700 text-sm font-semibold">
+                  Seekers
+                </Text>
+              </TouchableOpacity>
+            )} */}
+            {type === 'completed' && (
+              <TouchableOpacity className="bg-amber-100 px-4 py-3 rounded-xl">
+                <Text className="text-amber-700 text-sm font-semibold">
+                  ⭐ Review
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
+export default TaskCard;
