@@ -1,0 +1,191 @@
+High-Level Summary of Poster Flow
+
+Bottom Navigation (4 Tabs):
+
+🏠 Home — overview of tasks & analytics
+
+🧾 Tasks — manage, create, edit tasks
+
+🔔 Notifications — view interest requests
+
+👤 Profile — edit personal info
+
+🏠 1️⃣ Home Tab (Dashboard Overview)
+
+Purpose: Quick glance of what’s happening with the poster’s posted tasks.
+
+UI Elements:
+
+Top Header → Greeting, maybe small avatar
+
+Optional analytics summary → “3 Active · 1 Pending · ₹540 Spent”
+
+Tabs / Segments:
+
+Active Tasks
+
+Pending Review
+
+Completed
+
+Task cards list below each:
+
+Title
+
+Status badge (In Progress / Pending / Completed)
+
+Seeker name (if assigned) + avatar
+
+Budget (₹ / Free)
+
+Deadline
+
+“View Details” button
+
+Floating Action Button (FAB):
+
++ New Task → Opens Task Creation Flow (same as Tasks tab “Create New Task”)
+
+🧾 2️⃣ Tasks Tab
+
+This is your main “Task Management” hub.
+Contains 3 subsections (or horizontal tab navigation):
+
+Completed Tasks
+
+Pending Tasks
+
+Create New Task
+
+🧩 A. Pending Tasks
+
+Shows all tasks that are created but not yet completed.
+
+Each task card → “View Details”
+
+On click → opens Task Detail Screen
+
+Actions on this screen:
+
+✏️ Edit task
+
+🗑️ Delete task
+
+👀 View Interested Seekers (New screen)
+
+✅ B. Completed Tasks
+
+Similar list view
+
+Each task → “View Details” (Read-only)
+
+No edit/delete allowed (task locked)
+
+➕ C. Create New Task
+
+Opens a multi-step form (like a tabbed flow):
+
+Basic Info
+
+Task Title
+
+Description
+
+Category & Deadline
+
+Select category (e.g., study help, design, roommate search)
+
+Deadline picker
+
+Payment Type
+
+Toggle: Free / Paid
+
+If Paid → Input budget (₹)
+
+Confirm Task
+
+Show preview summary
+
+“Post Task” button
+
+✅ Once posted → show success message → redirect to “Pending Tasks” list.
+
+🔔 3️⃣ Notifications Tab
+
+Purpose: Show all “Interest Requests” from seekers for the poster’s tasks.
+
+UI Elements:
+
+List of notifications like:
+
+“Rahul Sharma is interested in your task: Design Poster for Club Event”
+
+“Sneha Patel completed task: Find roommate near XYZ hostel”
+
+When a user taps one:
+→ Open Interest Request Detail Screen
+
+📋 Interest Request Detail Screen
+
+Shows:
+
+Task name
+
+Seeker’s profile summary (name, skills, rating, avatar)
+
+Short note or message they sent when showing interest
+
+Buttons:
+
+👀 View Seeker Profile (opens profile screen)
+
+✅ Confirm Seeker (marks seeker as assigned)
+
+❌ Reject Request
+
+👤 4️⃣ Profile Tab
+
+Purpose: Manage all personal info of poster.
+
+Sections:
+
+Profile picture
+
+Full name
+
+Email
+
+Contact info
+
+College / location
+
+Account type: Poster
+
+Edit profile button
+
+Save changes
+
+Optionally:
+
+“Switch to Seeker Mode” (future)
+
+Logout button
+
+👥 5️⃣ Seeker Profile View (when poster opens a seeker’s profile)
+
+You’ll need this screen for when the poster wants to review who showed interest.
+
+UI Elements:
+
+Seeker profile photo
+
+Name
+
+Email & contact number (only visible after interest request sent)
+
+Skill tags / rating (if any)
+
+“Number of Completed Tasks” (if you’re tracking that)
+
+“Confirm for this Task” button

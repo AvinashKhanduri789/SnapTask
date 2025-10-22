@@ -1,0 +1,91 @@
+🧭 SnapTask — Seeker Flow (Simplified)
+🔹 Bottom Navigation (3 Tabs)
+
+Tasks
+
+Notifications
+
+My Profile
+
+1️⃣ Tasks Tab
+
+This is the main screen where seekers manage or explore tasks.
+
+Sections inside Tasks:
+
+New:
+
+Shows all available (open) tasks that the seeker can apply for.
+
+Each card displays:
+
+Task title, short description, budget (if paid), and location.
+
+Tap → opens Task Details (read-only view).
+
+Button: “Request / Accept Task” (depending on how you handle claiming).
+
+Pending:
+
+Tasks the seeker has already accepted and is currently working on.
+
+Each card shows progress/status, due date, etc.
+
+Tap → opens Task Details (read-only).
+
+No editing options — seeker only views and updates progress through system-defined actions if allowed (like “Mark as Done”).
+
+Completed:
+
+Shows all tasks seeker has completed.
+
+Each card can show completion date and earned rating/review.
+
+Tap → opens details and feedback summary.
+
+2️⃣ Notifications Tab
+
+Shows updates about:
+
+Task status changes (e.g., “Your submission is under review”).
+
+Messages or new task recommendations.
+
+Ratings or reviews from Posters.
+
+UI layout:
+
+List view, each item with small icon, short message, timestamp.
+
+Swipe to mark as read / delete.
+
+3️⃣ My Profile Tab
+
+This is where the seeker manages their personal data.
+
+Sections / UI elements:
+
+Profile Card: profile picture, name, short bio.
+
+Location selector: choose or update location (used for task matching).
+
+Ratings & Reviews:
+
+Average rating (e.g., ⭐ 4.8 / 5)
+
+List of reviews from Posters.
+
+Skills / Interests: editable list.
+
+Settings / Logout.
+
+💡 Flow Summary
+
+The seeker can only view tasks (never edit them).
+
+The main focus is browsing, tracking, and reputation.
+
+Navigation stays minimal and aligned with mobile UX patterns.
+
+Would you like me to now make a wireframe or UML diagram of this seeker flow (with Tasks → Pending/New/Completed and Profile structure)?
+It’ll show visually how screens link together.
