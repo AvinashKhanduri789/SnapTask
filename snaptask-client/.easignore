@@ -27,12 +27,11 @@ Thumbs.db
 *.env
 firebase_private_keys.json
 application.properties
-google-services.json
 
 # ==============================
 # React Native
 # ==============================
-snaptask-client/node_modules/
+/node_modules/
 /.expo/
 /dist/
 /android/

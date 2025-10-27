@@ -2,11 +2,10 @@ import { Stack, useRouter, Slot } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { NotificationProvider } from "../context/NotificationContext";
 import "../global.css";
 
-// ========================
-// 🔹 Auth Context
-// ========================
+// Auth Context
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
@@ -20,11 +19,11 @@ const GlobalAuthState = ({ children }) => {
         // const storedUser = await AsyncStorage.getItem("userData");
         // if (storedUser) setUserData(JSON.parse(storedUser));
 
-        // ✅ Mock user for now
+        // Mock user for now
         setUserData({
           email: "khanduria11@gmail.com",
           username: "avinash.khanduri",
-          role: "POSTER", // or POSTER
+          role: "SEEKER", // or POSTER
           token: "mock-jwt-token",
         });
       } catch (err) {
@@ -51,9 +50,7 @@ const GlobalAuthState = ({ children }) => {
   );
 };
 
-// ========================
-// 🔹 AuthGate (delayed router access)
-// ========================
+// AuthGate (delayed router access)
 const AuthGate = () => {
   const router = useRouter();
   const { userData, loading } = useAuth();
@@ -73,21 +70,23 @@ const AuthGate = () => {
   return null;
 };
 
-// ========================
-// 🔹 Root Layout
-// ========================
+
+// Root Layout
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GlobalAuthState>
         {/* Stack Router */}
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="poster" />
-          <Stack.Screen name="seeker" />
-        </Stack>
-        <AuthGate />
+        <NotificationProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="auth" />
+            <Stack.Screen name="poster" />
+            <Stack.Screen name="seeker" />
+          </Stack>
+          <AuthGate />
+        </NotificationProvider>
       </GlobalAuthState>
     </GestureHandlerRootView>
   );

@@ -4,7 +4,7 @@
     "slug": "HelpHive_client",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/download.jpg",
     "scheme": "helphiveclient",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -12,22 +12,25 @@
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "bundleIdentifier": "com.avinash.Snaptask"
     },
     "android": {
       "windowSoftInputMode": "adjustResize",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/download.jpg",
+        "backgroundImage": "./assets/images/download.jpg",
+        "monochromeImage": "./assets/images/download.jpg",
       },
+      "googleServicesFile":"./app/google-services.json",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.avinash.Snaptask"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
+      "favicon": "./assets/images/download.jpg",
       "bundler": "metro"
     },
     "plugins": [
@@ -35,7 +38,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/download.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -49,6 +52,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0e31623d-8207-400d-8be8-64b01d8f5373"
+      }
+    },
+    "owner": "avinash_khanduri.dev"
   }
 }

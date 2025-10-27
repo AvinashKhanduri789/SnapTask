@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TaskRepository extends MongoRepository<Task,String>,TaskRepositoryCustom{
+public interface TaskRepository extends MongoRepository<Task,String> {
     List<Task> findByPosterId(String posterId);
 
     Optional<Task> findByIdAndPosterId(String id, String posterId);

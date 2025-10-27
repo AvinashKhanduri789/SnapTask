@@ -1,32 +1,37 @@
 package com.snaptask.server.snaptask_server.service.task;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.messaging.*;
 import com.snaptask.server.snaptask_server.dto.bid.PosterBidSummaryDto;
+import com.snaptask.server.snaptask_server.dto.notification.FCMNotificationDto;
 import com.snaptask.server.snaptask_server.dto.task.*;
-import com.snaptask.server.snaptask_server.enums.TaskStatus;
-import com.snaptask.server.snaptask_server.enums.UserRole;
-import com.snaptask.server.snaptask_server.enums.WorkMode;
+import com.snaptask.server.snaptask_server.enums.*;
 import com.snaptask.server.snaptask_server.exceptions.customExceptions.ResourceNotFoundException;
 import com.snaptask.server.snaptask_server.modals.Bid;
 import com.snaptask.server.snaptask_server.modals.Task;
 import com.snaptask.server.snaptask_server.modals.User;
 import com.snaptask.server.snaptask_server.repository.bid.BidRepository;
+import com.snaptask.server.snaptask_server.repository.notification.NotificationRepository;
 import com.snaptask.server.snaptask_server.repository.task.TaskRepository;
 import com.snaptask.server.snaptask_server.repository.user.UserRepository;
+import com.snaptask.server.snaptask_server.service.ExpoPushService;
+import com.snaptask.server.snaptask_server.service.FirebaseService;
 import com.snaptask.server.snaptask_server.util.Helper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.snaptask.server.snaptask_server.modals.Notification;
+import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,18 +41,32 @@ public class TaskService {
     private final Helper helper;
     private final UserRepository userRepository;
     private final BidRepository bidRepository;
+    private final FirebaseService fcmService;
+    private final ExpoPushService expoPushService;
+    private final NotificationRepository notificationRepository;
+
+//    jsut for testing
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate = new RestTemplate();
     public TaskService(
             TaskRepository taskRepository,
             Helper helper,
             UserRepository userRepository,
-            BidRepository bidRepository
+            BidRepository bidRepository,
+            FirebaseService firebaseService,
+            NotificationRepository notificationRepository,
+            ExpoPushService expoPushService
     ){
         this.taskRepository = taskRepository;
         this.helper = helper;
         this.userRepository = userRepository;
         this.bidRepository = bidRepository;
+        this.fcmService = firebaseService;
+        this.notificationRepository = notificationRepository;
+        this.expoPushService = expoPushService;
     }
 
+    @Transactional
     @Async
     public void notifySeekersForTask(Task task, GeoJsonPoint posterLocation) {
         if (task == null) {
@@ -55,55 +74,68 @@ public class TaskService {
             return;
         }
 
-        List<User> targetSeekers = new ArrayList<>();
-
         try {
-            if (task.getMode() == WorkMode.ONSITE) {
-                if (posterLocation == null) {
-                    log.warn("ON_SITE task {} missing poster location, skipping geo notifications", task.getId());
-                } else {
-                    targetSeekers = userRepository.findByRoleAndGeoJsonPointNear(
-                            UserRole.SEEKER,
-                            posterLocation,
-                            new Distance(10, Metrics.KILOMETERS)
-                    );
-                    log.info("Found {} seekers within 10 km for task {}", targetSeekers.size(), task.getId());
-                }
-            } else if (task.getMode() == WorkMode.REMOTE) {
-                targetSeekers = userRepository.findByRoleAndSkillsIn(
-                        UserRole.SEEKER,
-                        List.of(task.getCategory()) // Or a skill list if more complex matching
-                );
-                log.info("Found {} remote seekers for task {} based on skills/category", targetSeekers.size(), task.getId());
-            } else {
-                log.warn("Task {} has unknown work mode {}, skipping notifications", task.getId(), task.getMode());
-                return;
-            }
-
+            List<User> targetSeekers = helper.findEligibleSeekers(task, posterLocation);
 
             if (targetSeekers.isEmpty()) {
                 log.info("No seekers to notify for task {}", task.getId());
                 return;
             }
 
+            // 🔹 Collect Expo tokens and receiver IDs
+            List<String> expoTokens = targetSeekers.stream()
+                    .map(User::getFcmToken) // 👈 ensure you have this field in User
+                    .filter(token -> token != null && !token.isBlank())
+                    .distinct()
+                    .toList();
 
-            targetSeekers.forEach(seeker -> {
-                try {
-//                    if (seeker.getFcmToken() == null || seeker.getFcmToken().isBlank()) {
-//                        log.warn("Seeker {} does not have FCM token, skipping", seeker.getId());
-//                        return;
-//                    }
-//                    fcmService.sendNotification(
-//                            seeker.getFcmToken(),
-//                            "New Task Available!",
-//                            task.getTitle() + " - " + task.getCategory()
-//                    );
-                } catch (Exception e) {
-                    log.error("Failed to send notification to seeker {}: {}", seeker.getId(), e.getMessage(), e);
-                }
-            });
+            List<String> receiverIds = targetSeekers.stream()
+                    .map(User::getId)
+                    .distinct()
+                    .toList();
 
-            log.info("Notification process completed for task {} ({} seekers notified)", task.getId(), targetSeekers.size());
+            if (expoTokens.isEmpty()) {
+                log.info("No valid Expo push tokens found for task {}", task.getId());
+                return;
+            }
+
+            // 🔹 Save single notification record
+            Notification notification = Notification.builder()
+                    .senderId(helper.getCurrentLoggedInUser().getId())
+                    .posterName(helper.getCurrentLoggedInUser().getName())
+                    .receiverIds(receiverIds)
+                    .taskId(task.getId())
+                    .taskTitle(task.getTitle())
+                    .message("A new task matching your skills is available!")
+                    .budget(task.getBudget() != null ? String.valueOf(task.getBudget()) : null)
+                    .deadline(task.getDeadline() != null ? task.getDeadline().toString() : null)
+                    .type(NotificationType.BID)
+                    .status(NotificationStatus.NEW)
+                    .isSeen(false)
+                    .build();
+
+            notificationRepository.save(notification);
+            log.info("Saved broadcast notification for task {} with {} seekers", task.getId(), receiverIds.size());
+
+            // 🔹 Prepare payload
+            String title = "New Task Available!";
+            String body = task.getTitle() + " - " + task.getCategory();
+            Map<String, Object> data = Map.of(
+                    "taskId", task.getId(),
+                    "taskTitle", task.getTitle(),
+                    "taskCategory", task.getCategory(),
+                    "type", NotificationType.BID.name(),
+                    "notificationId", notification.getId()
+            );
+
+            // 🔹 Send Expo push notifications directly — no need for another async layer
+            final int batchSize = 100;
+            for (int i = 0; i < expoTokens.size(); i += batchSize) {
+                List<String> batch = expoTokens.subList(i, Math.min(i + batchSize, expoTokens.size()));
+                expoPushService.sendBatchNotifications(batch, title, body, data);
+            }
+
+            log.info(" Expo push dispatch started for task {} ({} total tokens)", task.getId(), expoTokens.size());
 
         } catch (Exception e) {
             log.error("Unexpected error while notifying seekers for task {}: {}", task.getId(), e.getMessage(), e);
@@ -128,49 +160,83 @@ public class TaskService {
                 .build();
         Task savedTask = taskRepository.save(task);
 
-//        notifySeekersForTask(savedTask,helper.getCurrentLoggedInUser().getGeoJsonPoint());
-
-
+        notifySeekersForTask(savedTask,helper.getCurrentLoggedInUser().getGeoJsonPoint());
         return ResponseEntity.status(HttpStatus.CREATED).body("Task created successfully");
     }
 
+    @Transactional
     public ResponseEntity<String> updateTask(UpdateTaskDto dto) {
-        // Validate taskId
         if (dto.getTaskId() == null || dto.getTaskId().isBlank()) {
             return ResponseEntity.badRequest().body("Task ID must not be blank");
         }
 
-        Task task;
-        try {
-            task = taskRepository.findById(dto.getTaskId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + dto.getTaskId()));
-        } catch (Exception e) {
-            log.error("Error fetching task with id {}: {}", dto.getTaskId(), e.getMessage());
-            throw e; // Let global exception handler handle it
-        }
+        Task task = taskRepository.findById(dto.getTaskId())
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + dto.getTaskId()));
 
-        // Optional: verify current user is owner of the task
         String currentUserId = helper.getCurrentLoggedInUser().getId();
+
         if (!task.getPosterId().equals(currentUserId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to update this task");
         }
 
-        // Update fields if present
+        //  Update only provided fields
         if (dto.getTitle() != null) task.setTitle(dto.getTitle().trim());
         if (dto.getDescription() != null) task.setDescription(dto.getDescription().trim());
         if (dto.getCategory() != null) task.setCategory(dto.getCategory().trim());
         if (dto.getBudget() != null) task.setBudget(dto.getBudget());
         if (dto.getDeadline() != null) task.setDeadline(dto.getDeadline());
-
         task.setUpdatedAt(LocalDateTime.now());
 
-        // Save updated task
-        try {
-            taskRepository.save(task);
-            log.info("Task {} updated successfully by user {}", task.getId(), currentUserId);
-        } catch (Exception e) {
-            log.error("Error updating task {}: {}", task.getId(), e.getMessage());
-            throw e;
+        taskRepository.save(task);
+        log.info("Task {} updated successfully by poster {}", task.getId(), currentUserId);
+
+        //  Notify assigned seeker only if exists
+        if (task.getAssignedSeekerId() != null) {
+            Optional<User> seekerOpt = userRepository.findById(task.getAssignedSeekerId());
+            if (seekerOpt.isPresent()) {
+                User seeker = seekerOpt.get();
+
+                // ---  Save Notification record ---
+                Notification notification = Notification.builder()
+                        .receiverIds(List.of(seeker.getId()))
+                        .senderId(currentUserId)
+                        .senderName(helper.getCurrentLoggedInUser().getName())
+                        .posterName(helper.getCurrentLoggedInUser().getName())
+                        .posterRating(helper.getCurrentLoggedInUser().getRating()) // optional
+                        .taskId(task.getId())
+                        .taskTitle(task.getTitle())
+                        .type(NotificationType.UPDATE)
+                        .status(NotificationStatus.NEW)
+                        .targetRole(UserRole.SEEKER)
+                        .userRole(UserRole.POSTER)
+                        .message("Poster has updated your assigned task. Please review the new details.")
+                        .budget(task.getBudget() != null ? String.valueOf(task.getBudget()) : null)
+                        .deadline(task.getDeadline() != null ? task.getDeadline().toString() : null)
+                        .isSeen(false)
+                        .build();
+
+                notificationRepository.save(notification);
+                log.info("Saved update notification for seeker {} (taskId={})", seeker.getId(), task.getId());
+
+                // ---Send Push Notification (async safe call) ---
+                CompletableFuture.runAsync(() -> {
+                    String title = "Task Updated!";
+                    String body = task.getTitle() + " has been updated by " + notification.getPosterName();
+
+                    Map<String, Object> data = Map.of(
+                            "taskId", task.getId(),
+                            "notificationId", notification.getId(),
+                            "type", NotificationType.UPDATE.name()
+                    );
+
+                    expoPushService.sendNotification(
+                            seeker.getFcmToken(),
+                            title,
+                            body,
+                            data
+                    );
+                });
+            }
         }
 
         return ResponseEntity.ok("Task updated successfully");
@@ -281,4 +347,35 @@ public class TaskService {
 
         return ResponseEntity.ok(taskDetailDto);
     }
+
+
+    public void sendPushNotification(String expoToken, String title, String body) {
+        try {
+            // Prepare payload
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("to", expoToken);
+            payload.put("sound", "default");
+            payload.put("title", title);
+            payload.put("body", body);
+            payload.put("priority", "high");
+
+            // Convert map to JSON string
+            String jsonBody = objectMapper.writeValueAsString(payload);
+
+            // Create headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            // Create request
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+
+            // Send request
+            ResponseEntity<String> response = restTemplate.postForEntity("https://exp.host/--/api/v2/push/send", request, String.class);
+
+            System.out.println("✅ Expo push response: " + response.getBody());
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send Expo push notification: " + e.getMessage());
+        }
+    }
+
 }

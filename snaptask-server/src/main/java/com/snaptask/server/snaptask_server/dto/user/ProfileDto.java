@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PosterProfileDto {
+public class ProfileDto {
 
     @NotBlank(message = "User ID cannot be blank")
     private String id;

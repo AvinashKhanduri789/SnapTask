@@ -4,6 +4,7 @@ public enum NotificationType {
     BID,
     COMPLETED,
     UPDATE,
-    SYSTEM
+    SYSTEM,
+
 }
 

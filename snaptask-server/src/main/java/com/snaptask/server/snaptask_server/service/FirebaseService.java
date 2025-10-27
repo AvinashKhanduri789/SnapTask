@@ -1,7 +1,12 @@
 package com.snaptask.server.snaptask_server.service;
 
+import com.google.firebase.messaging.*;
 import com.snaptask.server.snaptask_server.dto.notification.FCMNotificationDto;
+import com.snaptask.server.snaptask_server.exceptions.customExceptions.NotificationException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -9,11 +14,6 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
 
 
 @Service
@@ -48,6 +48,40 @@ public class FirebaseService {
                 .build();
 
         return sendAsync(message);
+    }
+
+    /**
+     * Send notification to multiple devices efficiently (batch mode).
+     * Firebase supports up to 500 tokens per request.
+     */
+    public CompletableFuture<BatchResponse> sendNotificationToMultipleDevicesAsync(List<String> deviceTokens, FCMNotificationDto request) {
+        Objects.requireNonNull(deviceTokens, "Device token list cannot be null");
+        if (deviceTokens.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        validateRequest(request);
+
+        // Build one message for all tokens
+        MulticastMessage message = MulticastMessage.builder()
+                .addAllTokens(deviceTokens)
+                .setNotification(Notification.builder()
+                        .setTitle(request.getTitle())
+                        .setBody(request.getBody())
+                        .build())
+                .putAllData(request.getData() != null ? request.getData() : Map.of())
+                .build();
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
+                log.info("✅ Batch sent: {} success, {} failed", response.getSuccessCount(), response.getFailureCount());
+                return response;
+            } catch (FirebaseMessagingException e) {
+                log.error("❌ Failed to send batch notification", e);
+                throw new NotificationException("Error sending batch notifications", e);
+            }
+        });
     }
 
     /**
@@ -89,12 +123,5 @@ public class FirebaseService {
         Objects.requireNonNull(request.getBody(), "Notification message cannot be null");
     }
 
-    /**
-     * Custom runtime exception for notification failures.
-     */
-    public static class NotificationException extends RuntimeException {
-        public NotificationException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
+
 }

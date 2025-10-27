@@ -86,6 +86,9 @@ public class User implements UserDetails {
     @Field("role")
     private UserRole role;
 
+    @Field("fcmToken")
+    private String fcmToken;
+
     @Field("rating")
     @Builder.Default
     private double rating = 0.0;

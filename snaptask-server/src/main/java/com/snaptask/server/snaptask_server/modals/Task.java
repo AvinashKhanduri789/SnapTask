@@ -43,7 +43,7 @@ public class Task {
     private String category;
 
     @Field("budget")
-    private double budget;
+    private Double budget;
 
     @Field("unpaid")
     private boolean isUnpaid;
