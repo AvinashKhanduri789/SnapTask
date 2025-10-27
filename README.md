@@ -76,7 +76,7 @@ npx expo start
 Example:
 
 const api = axios.create({
-  baseURL: "http://10.50.30.30:4000", // Your local IP and Spring Boot port
+  baseURL: "http://<YOUR_HOST_IP>:4000", // Your local IP and Spring Boot port
 });
 
 🔥 Current Progress
