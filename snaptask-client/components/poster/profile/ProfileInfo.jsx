@@ -1,7 +1,8 @@
 // components/profile/ProfileInfo.js
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { formatDate } from '../../../util/helper';
 
 const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
   const ProfileField = ({ label, value, field, icon, editable = true, keyboardType = 'default', multiline = false }) => (
@@ -14,7 +15,7 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
       {isEditing && editable ? (
         <TextInput
           className={`text-slate-800 text-base font-semibold border-b-2 border-slate-200 ${multiline ? 'min-h-20' : 'pb-2'}`}
-          value={value}
+          value={value || ''}
           onChangeText={(text) => updateProfileData(field, text)}
           keyboardType={keyboardType}
           multiline={multiline}
@@ -22,6 +23,10 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
           textAlignVertical={multiline ? 'top' : 'center'}
           placeholder={multiline ? "Tell others about yourself..." : ""}
           placeholderTextColor="#94a3b8"
+          // Add these props to fix keyboard issues
+          blurOnSubmit={!multiline}
+          returnKeyType={multiline ? "default" : "done"}
+          onSubmitEditing={multiline ? undefined : () => {}}
         />
       ) : (
         <Text className={`text-slate-800 text-base font-semibold ${multiline ? 'leading-5' : ''}`}>
@@ -37,24 +42,20 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
         <Ionicons name={icon} size={20} color={color} />
         <Text className="text-slate-600 font-semibold text-sm ml-2">{label}</Text>
       </View>
-      <Text className="text-slate-800 text-base font-semibold">{value}</Text>
+      <Text className="text-slate-800 text-base font-semibold">{value || 'Not set'}</Text>
     </View>
   );
 
   return (
-    <ScrollView className="bg-white rounded-3xl p-6 shadow-sm shadow-slate-200" showsVerticalScrollIndicator={false}>
+    // REMOVED ScrollView - using View instead to avoid nested scrolling
+    <View className="bg-white rounded-3xl p-6 shadow-sm shadow-slate-200">
       {/* Profile Picture Section */}
       <View className="items-center mb-6">
         <View className="w-24 h-24 bg-purple-500 rounded-2xl items-center justify-center mb-4 shadow-sm">
           <Text className="text-white text-2xl font-bold">
-            {profileData.name.charAt(0)}
+            {profileData.name?.charAt(0) || 'U'}
           </Text>
         </View>
-        {/* {isEditing && (
-          <TouchableOpacity className="bg-purple-100 px-4 py-2 rounded-full border border-purple-200">
-            <Text className="text-purple-700 font-semibold text-sm">Change Photo</Text>
-          </TouchableOpacity>
-        )} */}
       </View>
 
       {/* Personal Information */}
@@ -73,6 +74,7 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
         field="email"
         icon="mail"
         keyboardType="email-address"
+        editable={false} // Email is typically not editable
       />
       
       <ProfileField
@@ -85,8 +87,8 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
       
       <ProfileField
         label="College/University"
-        value={profileData.college}
-        field="college"
+        value={profileData.workplace}
+        field="workplace" // Fixed: was "college" but should match your API field
         icon="school"
       />
       
@@ -109,7 +111,7 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
       {/* Skills Section */}
       <ProfileField
         label="Skills & Expertise"
-        value={profileData.skills}
+        value={Array.isArray(profileData.skills) ? profileData.skills.join(', ') : profileData.skills}
         field="skills"
         icon="construct"
         multiline={true}
@@ -127,14 +129,14 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
       
       <ReadOnlyField
         label="Rating"
-        value={profileData.rating || "4.8 / 5"}
+        value={profileData.rating ? `${profileData.rating} ⭐` : 'No ratings yet'}
         icon="star"
         color="#f59e0b"
       />
       
       <ReadOnlyField
         label="Member Since"
-        value={profileData.joinDate || "Jan 2024"}
+        value={formatDate(profileData.joinDate) || 'Not available'}
         icon="calendar"
         color="#6366f1"
       />
@@ -148,7 +150,7 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
             <Ionicons name="document-text" size={16} color="#6366f1" />
             <Text className="text-slate-600 text-xs font-semibold ml-1">Tasks Posted</Text>
           </View>
-          <Text className="text-slate-800 text-xl font-bold">12</Text>
+          <Text className="text-slate-800 text-xl font-bold">{profileData.taskPosted || 0}</Text>
         </View>
         
         <View className="bg-slate-50 rounded-2xl p-4 flex-1 mx-2 border border-slate-200">
@@ -156,7 +158,7 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
             <Ionicons name="checkmark-done" size={16} color="#10b981" />
             <Text className="text-slate-600 text-xs font-semibold ml-1">Completed</Text>
           </View>
-          <Text className="text-slate-800 text-xl font-bold">8</Text>
+          <Text className="text-slate-800 text-xl font-bold">{profileData.completed || 0}</Text>
         </View>
         
         <View className="bg-slate-50 rounded-2xl p-4 flex-1 ml-2 border border-slate-200">
@@ -164,11 +166,11 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
             <Ionicons name="time" size={16} color="#f59e0b" />
             <Text className="text-slate-600 text-xs font-semibold ml-1">Active</Text>
           </View>
-          <Text className="text-slate-800 text-xl font-bold">3</Text>
+          <Text className="text-slate-800 text-xl font-bold">{profileData.active || 0}</Text>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
-export default ProfileInfo;
+export default React.memo(ProfileInfo);

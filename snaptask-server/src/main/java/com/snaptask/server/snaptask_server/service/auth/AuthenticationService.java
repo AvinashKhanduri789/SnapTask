@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -63,13 +64,25 @@ public class AuthenticationService {
         if (userRepository.existsByEmail(dto.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body("Email is already registered.");
+                    .body(Map.of(
+                            "title", "Validation Failed",
+                            "detail", "Email is already registered.",
+                            "status", 400,
+                            "path", "/auth/signup",
+                            "timestamp", Instant.now().toString()
+                    ));
         }
 
         if (dto.getPhone() != null && userRepository.existsByPhone(dto.getPhone())) {
             return ResponseEntity
                     .badRequest()
-                    .body("Phone number is already registered.");
+                    .body(Map.of(
+                            "title", "Validation Failed",
+                            "detail", "Phone number is already registered.",
+                            "status", 400,
+                            "path", "/auth/signup",
+                            "timestamp", Instant.now().toString()
+                    ));
         }
 
         // Generate OTP
@@ -104,7 +117,6 @@ public class AuthenticationService {
 
     public ResponseEntity<?> authenticate(LoginUserDto input) {
         try {
-
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             input.getEmail(),
@@ -115,15 +127,18 @@ public class AuthenticationService {
             User user = userRepository.findByEmail(input.getEmail())
                     .orElseThrow(() -> new BadCredentialsException("Invalid email or password."));
 
-
             if (!user.isEnabled()) {
-                throw new DisabledException("Account is not verified. Please verify your email first.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "title", "Account Not Verified",
+                        "detail", "Your account is not verified. Please verify your email first.",
+                        "status", 403,
+                        "path", "/auth/login",
+                        "timestamp", Instant.now().toString()
+                ));
             }
-
 
             String token = jwtService.generateToken(user);
             long expiry = jwtService.getExpirationTime();
-
 
             LoginResponseDto response = LoginResponseDto.builder()
                     .name(user.getName())
@@ -139,87 +154,168 @@ public class AuthenticationService {
 
         } catch (BadCredentialsException ex) {
             log.warn("Invalid login attempt for email: {}", input.getEmail());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid email or password.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "title", "Invalid Credentials",
+                    "detail", "Invalid email or password.",
+                    "status", 401,
+                    "path", "/auth/login",
+                    "timestamp", Instant.now().toString()
+            ));
 
         } catch (DisabledException ex) {
             log.warn("Attempted login for unverified account: {}", input.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Account is not verified. Please verify your email first.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "title", "Account Not Verified",
+                    "detail", "Your account is not verified. Please verify your email first.",
+                    "status", 403,
+                    "path", "/auth/login",
+                    "timestamp", Instant.now().toString()
+            ));
 
         } catch (Exception ex) {
             log.error("Unexpected authentication error for {}: {}", input.getEmail(), ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal authentication error. Please try again later.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "title", "Server Error",
+                    "detail", "Internal authentication error. Please try again later.",
+                    "status", 500,
+                    "path", "/auth/login",
+                    "timestamp", Instant.now().toString()
+            ));
         }
     }
+
 
     public ResponseEntity<?> verifyUser(VerifyUserDto dto) {
-        // Find user directly — no need for existsByEmail (reduces DB calls)
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("No user registered with email: " + dto.getEmail()));
+        try {
+            User user = userRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new IllegalArgumentException("No user registered with this email."));
 
+            // Already verified
+            if (user.isEnabled()) {
+                return ResponseEntity.ok(Map.of(
+                        "title", "Already Verified",
+                        "detail", "Your account is already verified. You can log in now.",
+                        "status", 200,
+                        "path", "/auth/verify",
+                        "timestamp", Instant.now().toString()
+                ));
+            }
 
-        if (user.isEnabled()) {
-            return ResponseEntity.ok("Account already verified. You can log in now.");
+            // Invalid OTP
+            if (user.getVerificationCode() == null || !user.getVerificationCode().equals(dto.getOtp())) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "title", "Invalid Code",
+                        "detail", "The verification code you entered is invalid.",
+                        "status", 400,
+                        "path", "/auth/verify",
+                        "timestamp", Instant.now().toString()
+                ));
+            }
+
+            // Expired OTP
+            if (user.getVerificationCodeExpireTime() == null
+                    || Instant.now().isAfter(user.getVerificationCodeExpireTime())) {
+                return ResponseEntity.status(HttpStatus.GONE).body(Map.of(
+                        "title", "Verification Expired",
+                        "detail", "Your verification code has expired. Please request a new one.",
+                        "status", 410,
+                        "path", "/auth/verify",
+                        "timestamp", Instant.now().toString()
+                ));
+            }
+
+            // Success
+            user.setVerificationCode(null);
+            user.setVerificationCodeExpireTime(null);
+            user.setEnable(true);
+            userRepository.save(user);
+
+            log.info("✅ User verified successfully: {}", dto.getEmail());
+
+            return ResponseEntity.ok(Map.of(
+                    "title", "Verification Successful",
+                    "detail", "Your account has been activated successfully.",
+                    "status", 200,
+                    "path", "/auth/verify",
+                    "timestamp", Instant.now().toString()
+            ));
+
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "title", "User Not Found",
+                    "detail", ex.getMessage(),
+                    "status", 400,
+                    "path", "/auth/verify",
+                    "timestamp", Instant.now().toString()
+            ));
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "title", "Internal Server Error",
+                    "detail", "Something went wrong during verification.",
+                    "status", 500,
+                    "path", "/auth/verify",
+                    "timestamp", Instant.now().toString()
+            ));
         }
-
-
-        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(dto.getOtp())) {
-            return ResponseEntity.badRequest().body("Invalid verification code.");
-        }
-
-
-        if (user.getVerificationCodeExpireTime() == null || Instant.now().isAfter(user.getVerificationCodeExpireTime())) {
-            return ResponseEntity.status(HttpStatus.GONE).body("Verification code has expired. Please request a new one.");
-        }
-
-
-        user.setVerificationCode(null);
-        user.setVerificationCodeExpireTime(null);
-        user.setEnable(true);
-        userRepository.save(user);
-
-        log.info("User verified successfully: {}", dto.getEmail());
-
-        return ResponseEntity.ok("Your account has been activated successfully.");
     }
-
     public ResponseEntity<?> resendVerificationCode(String email) {
 
         if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest().body("Email must not be blank.");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "title", "Validation Failed",
+                    "detail", "Email must not be blank.",
+                    "status", 400,
+                    "path", "/auth/verify/resend-verification",
+                    "timestamp", Instant.now().toString()
+            ));
         }
-
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("No user found with email: " + email));
 
-
         if (user.isEnabled()) {
-            return ResponseEntity.badRequest().body("Account is already verified. Please log in.");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "title", "Already Verified",
+                    "detail", "Account is already verified. Please log in.",
+                    "status", 400,
+                    "path", "/auth/verify/resend-verification",
+                    "timestamp", Instant.now().toString()
+            ));
         }
-
 
         if (user.getVerificationCodeExpireTime() != null &&
                 user.getVerificationCodeExpireTime().isAfter(Instant.now())) {
-            return ResponseEntity.badRequest().body("Please wait before requesting a new verification code.");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "title", "Too Many Requests",
+                    "detail", "Please wait before requesting a new verification code.",
+                    "status", 429,
+                    "path", "/auth/verify/resend-verification",
+                    "timestamp", Instant.now().toString()
+            ));
         }
-
 
         String newCode = helper.generateVerificationCode();
         user.setVerificationCode(newCode);
         user.setVerificationCodeExpireTime(Instant.now().plus(10, ChronoUnit.MINUTES));
 
-
         userRepository.save(user);
 
+        notificationEmailService.sendNotificationEmail(
+                email,
+                EmailNotificationType.ACCOUNT_VERIFICATION,
+                newCode
+        );
 
-         notificationEmailService.sendNotificationEmail(email,EmailNotificationType.ACCOUNT_VERIFICATION,newCode);
-
-
-        return ResponseEntity.ok("A new verification code has been sent to your email.");
+        return ResponseEntity.ok(Map.of(
+                "title", "Success",
+                "detail", "A new verification code has been sent to your email.",
+                "status", 200,
+                "path", "/auth/verify/resend-verification",
+                "timestamp", Instant.now().toString()
+        ));
     }
+
 
     public ResponseEntity<?> requestPasswordReset(String email) {
         if (email == null || email.isBlank()) {

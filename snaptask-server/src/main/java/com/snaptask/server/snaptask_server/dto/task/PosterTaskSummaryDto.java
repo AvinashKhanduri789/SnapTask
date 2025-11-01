@@ -23,6 +23,8 @@ public class PosterTaskSummaryDto {
     @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
     private String title;
 
+    private String description;
+
     @PositiveOrZero(message = "Budget must be zero or a positive number")
     private double budget;
 

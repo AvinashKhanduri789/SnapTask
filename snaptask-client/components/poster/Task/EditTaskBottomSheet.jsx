@@ -1,6 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState, useEffect } from 'react';
+import { formatDate } from '../../../util/helper';
+import { useApi } from '../../../util/useApi';
+import {api} from '../../../util/requester';
+import { Alert } from 'react-native';
 import {
   Animated,
   Dimensions,
@@ -14,8 +18,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.85;
+
 const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
   const [formData, setFormData] = useState({
     title: taskData?.title || '',
@@ -23,13 +30,21 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
     budget: taskData?.budget?.toString() || '',
     duration: taskData?.duration || '',
     category: taskData?.category || 'Design',
-    deadline: taskData?.deadline || '',
+    deadline: taskData?.deadline ? new Date(taskData.deadline) : new Date(),
     mode: taskData?.mode || 'Remote'
   });
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const { request, isLoading } = useApi();
   const translateY = useRef(new Animated.Value(BOTTOM_SHEET_HEIGHT)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
   const categories = ['Design', 'Development', 'Writing', 'Marketing', 'Other'];
   const modes = ['Remote', 'On-site', 'Hybrid'];
+
+  // Animate open/close
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -61,21 +76,82 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
       ]).start();
     }
   }, [visible]);
-  const handleSave = () => {
-    onSave({
-      ...formData,
-      budget: parseInt(formData.budget) || 0,
-    });
-    onClose();
+
+  // Convert date to ISO string for backend
+  const formatDateToISO = (date) => {
+    return date.toISOString();
   };
+
+  // Format date for display
+  const formatDateForDisplay = (date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+
+  const handleSave = async () => {
+    const payload = {
+      taskId: taskData?.id,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      category: formData.category,
+      budget: parseFloat(formData.budget) || 0,
+      deadline: formatDateToISO(formData.deadline), // Convert to ISO string
+    };
+
+    console.log("📦 Sending update payload:", payload);
+
+    const result = await request(api.put("/poster/update", payload));
+
+    if (result.ok) {
+      Alert.alert("✅ Success", "Task updated successfully!");
+      onSave && onSave();
+      onClose();
+    } else {
+      Alert.alert("❌ Error", result.error?.detail || "Failed to update task. Try again.");
+    }
+  };
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setFormData(prev => ({ 
+        ...prev, 
+        deadline: selectedDate 
+      }));
+    }
+  };
+
+  const handleTimeChange = (event, selectedTime) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const currentDate = formData.deadline;
+      const newDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        currentDate.getDate(),
+        selectedTime.getHours(),
+        selectedTime.getMinutes()
+      );
+      setFormData(prev => ({ 
+        ...prev, 
+        deadline: newDate 
+      }));
+    }
+  };
+
   const renderInputField = (label, field, placeholder, multiline = false, keyboardType = 'default') => (
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>
-        {label}
-      </Text>
+      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>{label}</Text>
       <View
         style={{
           backgroundColor: '#f5f5f5',
@@ -104,11 +180,81 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
       </View>
     </View>
   );
+
+  const renderDateField = () => (
+    <View style={{ marginBottom: 20 }}>
+      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>Deadline</Text>
+      
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <TouchableOpacity
+          onPress={() => setShowDatePicker(true)}
+          style={{
+            flex: 1,
+            backgroundColor: '#f5f5f5',
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: '#e0e0e0',
+            paddingHorizontal: 16,
+            paddingVertical: 15,
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Text style={{ fontSize: 16, color: '#111', fontWeight: '500' }}>
+            {formatDateForDisplay(formData.deadline)}
+          </Text>
+          <Ionicons name="calendar-outline" size={20} color="#6366F1" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setShowTimePicker(true)}
+          style={{
+            width: 60,
+            backgroundColor: '#f5f5f5',
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: '#e0e0e0',
+            paddingHorizontal: 12,
+            paddingVertical: 15,
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <Ionicons name="time-outline" size={20} color="#6366F1" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Date Picker */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={formData.deadline}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleDateChange}
+          minimumDate={new Date()}
+        />
+      )}
+
+      {/* Time Picker */}
+      {showTimePicker && (
+        <DateTimePicker
+          value={formData.deadline}
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleTimeChange}
+        />
+      )}
+
+      <Text style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+        ISO Format: {formatDateToISO(formData.deadline)}
+      </Text>
+    </View>
+  );
+
   const renderSelectField = (label, field, options, selectedValue) => (
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>
-        {label}
-      </Text>
+      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>{label}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {options.map((option) => (
@@ -137,55 +283,29 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
       </ScrollView>
     </View>
   );
+
   const handleBackgroundPress = () => {
     onClose();
   };
+
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
-      <Animated.View
-        style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          opacity: fadeAnim,
-        }}>
+      <Animated.View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', opacity: fadeAnim }}>
         <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={handleBackgroundPress} />
-        <Animated.View
-          style={{
-            height: BOTTOM_SHEET_HEIGHT,
-            transform: [{ translateY }],
-          }}>
-          <View
-            style={{
-              flex: 1,
-              borderTopLeftRadius: 32,
-              borderTopRightRadius: 32,
-              backgroundColor: '#fff',
-              overflow: 'hidden',
-            }}>
+        <Animated.View style={{ height: BOTTOM_SHEET_HEIGHT, transform: [{ translateY }] }}>
+          <View style={{ flex: 1, borderTopLeftRadius: 32, borderTopRightRadius: 32, backgroundColor: '#fff', overflow: 'hidden' }}>
+            
             {/* Header */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingHorizontal: 24,
-                paddingVertical: 20,
-                borderBottomWidth: 1,
-                borderBottomColor: '#eee',
-              }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
               <Text style={{ fontSize: 22, fontWeight: '800', color: '#1a1a1a' }}>Edit Task</Text>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={26} color="#6366F1" />
               </TouchableOpacity>
             </View>
+
             {/* Content */}
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              style={{ flex: 1 }}>
-              <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ padding: 24 }}
-                showsVerticalScrollIndicator={false}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
                 {renderInputField('Task Title', 'title', 'Enter task title...')}
                 {renderInputField('Description', 'description', 'Describe your task...', true)}
                 <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -198,47 +318,23 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
                 </View>
                 {renderSelectField('Category', 'category', categories, formData.category)}
                 {renderSelectField('Work Mode', 'mode', modes, formData.mode)}
-                {renderInputField('Deadline', 'deadline', 'e.g., Oct 15, 2024')}
+                {renderDateField()}
               </ScrollView>
             </KeyboardAvoidingView>
+
             {/* Buttons */}
-            <View
-              style={{
-                flexDirection: 'row',
-                paddingHorizontal: 24,
-                paddingVertical: 16,
-                borderTopWidth: 1,
-                borderTopColor: '#eee',
-                backgroundColor: '#fff',
-                gap: 12,
-              }}>
-              <TouchableOpacity
-                onPress={onClose}
-                style={{
-                  flex: 1,
-                  paddingVertical: 14,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: '#ddd',
-                  alignItems: 'center',
-                }}>
+            <View style={{ flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: 1, borderTopColor: '#eee', backgroundColor: '#fff', gap: 12 }}>
+              <TouchableOpacity onPress={onClose} style={{ flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#ddd', alignItems: 'center' }}>
                 <Text style={{ fontSize: 16, fontWeight: '700', color: '#555' }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleSave} style={{ flex: 2 }}>
-                <LinearGradient
-                  colors={['#6366F1', '#4F46E5']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    paddingVertical: 14,
-                    borderRadius: 12,
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}>
+
+              <TouchableOpacity onPress={handleSave} disabled={isLoading} style={{ flex: 2, opacity: isLoading ? 0.7 : 1 }}>
+                <LinearGradient colors={['#6366F1', '#4F46E5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ paddingVertical: 14, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
                   <Ionicons name="save-outline" size={20} color="#fff" />
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Save Changes</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>
+                    {isLoading ? "Saving..." : "Save Changes"}
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -248,4 +344,5 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
     </Modal>
   );
 };
+
 export default EditTaskBottomSheet;

@@ -1,5 +1,6 @@
 package com.snaptask.server.snaptask_server.service.auth;
 
+import com.snaptask.server.snaptask_server.exceptions.customExceptions.JwtExpiredException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -45,7 +46,7 @@ public class JwtService {
             return resolver.apply(claims);
         } catch (ExpiredJwtException e) {
             log.warn("JWT expired: {}", e.getMessage());
-            throw new JwtException("Token expired", e);
+            throw new JwtExpiredException(e.getMessage());
         } catch (JwtException e) {
             log.warn("Invalid JWT: {}", e.getMessage());
             throw new JwtException("Invalid JWT token", e);
@@ -73,12 +74,30 @@ public class JwtService {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             String username = extractUsername(token);
-            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-        } catch (JwtException e) {
-            log.warn("JWT validation failed: {}", e.getMessage());
-            return false;
+
+            if (!username.equals(userDetails.getUsername())) {
+                log.warn("Token username mismatch: expected {}, got {}", userDetails.getUsername(), username);
+                return false;
+            }
+
+            if (isTokenExpired(token)) {
+                throw new JwtExpiredException("JWT token expired for user: " + username);
+            }
+
+            return true;
+        }
+        catch (ExpiredJwtException e) {
+            throw new JwtExpiredException("JWT token expired: " + e.getMessage());
+        }
+        catch (JwtExpiredException e) {
+            throw e;
+        }
+        catch (JwtException | IllegalArgumentException e) {
+            log.error("Invalid JWT: {}", e.getMessage());
+            throw new JwtException("Invalid JWT: " + e.getMessage());
         }
     }
+
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());

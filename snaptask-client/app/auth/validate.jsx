@@ -1,1 +1,285 @@
-import React, { useEffect, useRef, useState } from 'react';import { Ionicons } from '@expo/vector-icons';import * as Haptics from 'expo-haptics';import { LinearGradient } from 'expo-linear-gradient';import {  ActivityIndicator,  Animated,  Easing,  KeyboardAvoidingView,  Keyboard,  Platform,  ScrollView,  Text,  TextInput,  TouchableOpacity,  View,} from 'react-native';import { SafeAreaView } from 'react-native-safe-area-context';const OTP_LENGTH = 6;const Validate = () => {  const [code, setCode] = useState('');  const [isLoading, setIsLoading] = useState(false);  const [resendTimer, setResendTimer] = useState(30);  const [isFocused, setIsFocused] = useState(false);  const fadeAnim = useState(new Animated.Value(0))[0];  const slideAnim = useState(new Animated.Value(50))[0];  const buttonScale = new Animated.Value(1);  const hiddenInputRef = useRef(null);  useEffect(() => {    Animated.parallel([      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),      Animated.timing(slideAnim, { toValue: 0, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }),    ]).start();  }, []);  useEffect(() => {    const t = setTimeout(() => hiddenInputRef.current?.focus(), 600);    return () => clearTimeout(t);  }, []);  useEffect(() => {    const hideSub = Keyboard.addListener('keyboardDidHide', () => {      setIsFocused(false);      hiddenInputRef.current?.blur();    });    return () => hideSub.remove();  }, []);  useEffect(() => {    if (resendTimer <= 0) return;    const t = setInterval(() => setResendTimer((s) => s - 1), 1000);    return () => clearInterval(t);  }, [resendTimer]);  const animatePress = () => {    Animated.spring(buttonScale, { toValue: 0.95, friction: 3, useNativeDriver: true }).start();  };  const animateRelease = () => {    Animated.spring(buttonScale, { toValue: 1, friction: 3, useNativeDriver: true }).start();  };  const handleChange = (text) => {    const digits = text.replace(/\D/g, '').slice(0, OTP_LENGTH);    setCode(digits);  };  const handleVerify = async () => {    if (code.length !== OTP_LENGTH) return;    setIsLoading(true);    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);    setTimeout(() => {      setIsLoading(false);    }, 1500);  };  const handleResend = async () => {    if (resendTimer > 0) return;    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);    setResendTimer(30);  };  const focusHidden = () => {    const input = hiddenInputRef.current;    if (!input) return;    if (input.isFocused && input.isFocused()) return;    input.focus();  };  const renderBox = (index) => {    const char = code[index] || '';    const focused = isFocused && index === Math.min(code.length, OTP_LENGTH - 1);    const gradientColors = focused || char      ? ['#6366F1', '#3B82F6']      : ['#E5E7EB', '#E5E7EB'];    return (      <TouchableOpacity key={index} activeOpacity={0.8} onPress={focusHidden} style={{ flex: 1 }}>        <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 14, padding: 2 }}>          <View style={{            height: 56,            borderRadius: 12,            backgroundColor: '#FFFFFF',            alignItems: 'center',            justifyContent: 'center',          }}>            <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827', letterSpacing: 0 }}>{char}</Text>          </View>        </LinearGradient>      </TouchableOpacity>    );  };  return (    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 32, paddingVertical: 20 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>            {/* Header */}            <View style={{ alignItems: 'center', marginBottom: 32 }}>              <LinearGradient colors={["#6366F1", "#3B82F6"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}                style={{ width: 80, height: 80, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 12 }}>                <Ionicons name="shield-checkmark-outline" size={32} color="#FFFFFF" />              </LinearGradient>              <Text style={{ fontSize: 28, fontWeight: '800', color: '#1f2937', marginBottom: 8, letterSpacing: -0.5 }}>Verify Your OTP</Text>              <Text style={{ fontSize: 16, color: '#6b7280', textAlign: 'center', lineHeight: 24 }}>Enter the 6-digit code sent to you</Text>            </View>            {/* OTP Boxes */}            <View style={{ marginBottom: 16 }}>              <View style={{ flexDirection: 'row', gap: 10 }}>                {Array.from({ length: OTP_LENGTH }).map((_, i) => renderBox(i))}              </View>            </View>            {/* Hidden Input */}            <TextInput              ref={hiddenInputRef}              value={code}              onChangeText={handleChange}              keyboardType="number-pad"              textContentType="oneTimeCode"              autoComplete="one-time-code"              maxLength={OTP_LENGTH}              style={{ position: 'absolute', opacity: 0.01, height: 1, width: 1, bottom: 0, left: 0 }}              onFocus={() => setIsFocused(true)}              onBlur={() => setIsFocused(false)}              autoFocus              showSoftInputOnFocus              caretHidden              contextMenuHidden              underlineColorAndroid="transparent"              blurOnSubmit={false}              editable              importantForAutofill="yes"              autoCorrect={false}              focusable              disableFullscreenUI            />            {/* Resend */}            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24, marginTop: 8 }}>              <Text style={{ color: '#6b7280', fontSize: 14 }}>Didn't receive the code? </Text>              <TouchableOpacity                disabled={resendTimer > 0}                onPress={handleResend}                activeOpacity={0.8}              >                <Text style={{ color: resendTimer > 0 ? '#9ca3af' : '#6366F1', fontSize: 14, fontWeight: '700' }}>                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend'}                </Text>              </TouchableOpacity>            </View>            {/* Verify Button */}            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>              <TouchableOpacity                onPressIn={animatePress}                onPressOut={animateRelease}                onPress={handleVerify}                disabled={isLoading || code.length !== OTP_LENGTH}                activeOpacity={0.9}                style={{ borderRadius: 16, width: '100%', shadowColor: '#6366F1', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 12 }}              >                <LinearGradient                  colors={isLoading || code.length !== OTP_LENGTH ? ['#c7d2fe', '#dbeafe'] : ['#6366F1', '#3B82F6']}                  start={{ x: 0, y: 0 }}                  end={{ x: 1, y: 0 }}                  style={{ paddingVertical: 18, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', opacity: isLoading ? 0.9 : 1 }}                >                  {isLoading ? (                    <ActivityIndicator color="#fff" size="small" />                  ) : (                    <>                      <Ionicons name="checkmark-circle-outline" size={22} color="#fff" />                      <Text style={{ color: 'white', fontSize: 17, fontWeight: '700', marginLeft: 12, letterSpacing: -0.2 }}>Verify</Text>                    </>                  )}                </LinearGradient>              </TouchableOpacity>            </Animated.View>            {/* Footer */}            <View style={{ alignItems: 'center', marginTop: 24 }}>              <Text style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', lineHeight: 20, fontWeight: '500' }}>                Enter the code to continue. Make sure you typed it correctly.              </Text>            </View>          </Animated.View>        </ScrollView>      </KeyboardAvoidingView>    </SafeAreaView>  );};export default Validate;
+import React, { useEffect, useRef, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert } from 'react-native';
+import { useApi } from "../../util/useApi";
+import { api } from "../../util/requester";
+import { useRouter } from 'expo-router';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
+const OTP_LENGTH = 6;
+const Validate = () => {
+  const [code, setCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [isFocused, setIsFocused] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(50))[0];
+  const buttonScale = new Animated.Value(1);
+  const hiddenInputRef = useRef(null);
+  const router = useRouter();
+  const { request } = useApi();
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, []);
+  useEffect(() => {
+    const t = setTimeout(() => hiddenInputRef.current?.focus(), 600);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setIsFocused(false);
+      hiddenInputRef.current?.blur();
+    });
+    return () => hideSub.remove();
+  }, []);
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setInterval(() => setResendTimer((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [resendTimer]);
+  const animatePress = () => {
+    Animated.spring(buttonScale, { toValue: 0.95, friction: 3, useNativeDriver: true }).start();
+  };
+  const animateRelease = () => {
+    Animated.spring(buttonScale, { toValue: 1, friction: 3, useNativeDriver: true }).start();
+  };
+  const handleChange = (text) => {
+    const digits = text.replace(/\D/g, '').slice(0, OTP_LENGTH);
+    setCode(digits);
+  };
+
+
+const handleVerify = async () => {
+  if (isLoading) return;
+  if (code.length !== OTP_LENGTH) {
+    Alert.alert("Invalid Code", "Please enter a valid 6-digit OTP.");
+    return;
+  }
+
+  setIsLoading(true);
+  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+  try {
+    const email = await AsyncStorage.getItem("pendingVerificationEmail");
+    if (!email) throw new Error("No email found for verification.");
+
+    const body = { email, otp: code };
+    const { ok, data, error } = await request(api.post("/auth/verify", body));
+
+    if (!ok) throw error;
+
+    Alert.alert(
+      data.title || "Success",
+      data.detail || "Your account has been verified successfully 🎉"
+    );
+
+    await AsyncStorage.removeItem("pendingVerificationEmail");
+
+    // Navigate only after alert, not before
+    setTimeout(() => router.replace("/auth/login"), 300);
+  } catch (err) {
+    const msg =
+      err?.response?.data?.detail ||
+      err?.detail ||
+      err?.message ||
+      "Invalid or expired OTP.";
+
+    Alert.alert("Verification Failed", msg);
+  } finally {
+    // 🔥 Always reset loading here
+    if (mounted.current) setIsLoading(false);
+  }
+};
+
+
+
+  const handleResend = async () => {
+  if (resendTimer > 0) return;
+
+  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+  try {
+    const email = await AsyncStorage.getItem("pendingVerificationEmail");
+    if (!email) {
+      Alert.alert("Error", "No email found. Please register again.");
+      return;
+    }
+
+    const body = { email };
+    const { ok, data, error } = await request(api.post("/auth/verify/resend-verification", body));
+
+    if (!ok) throw error;
+
+    // ✅ Optional: show success message once
+    Alert.alert(
+      data?.title || "Verification Email Sent",
+      data?.detail || "A new verification code has been sent to your email."
+    );
+
+    // ✅ Restart timer only if successful
+    setResendTimer(30);
+  } catch (err) {
+    // console.error("❌ Resend failed:", err);
+    const msg =
+      err?.response?.data?.detail ||
+      err?.detail ||
+      "Failed to resend verification code. Please try again.";
+    Alert.alert("Resend Failed", msg);
+  }
+};
+
+
+
+  const focusHidden = () => {
+    const input = hiddenInputRef.current;
+    if (!input) return;
+    if (input.isFocused && input.isFocused()) return;
+    input.focus();
+  };
+  const renderBox = (index) => {
+    const char = code[index] || '';
+    const focused = isFocused && index === Math.min(code.length, OTP_LENGTH - 1);
+    const gradientColors = focused || char
+      ? ['#6366F1', '#3B82F6']
+      : ['#E5E7EB', '#E5E7EB'];
+    return (
+      <TouchableOpacity key={index} activeOpacity={0.8} onPress={focusHidden} style={{ flex: 1 }}>
+        <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 14, padding: 2 }}>
+          <View style={{
+            height: 56,
+            borderRadius: 12,
+            backgroundColor: '#FFFFFF',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827', letterSpacing: 0 }}>{char}</Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 32, paddingVertical: 20 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            {/* Header */}
+            <View style={{ alignItems: 'center', marginBottom: 32 }}>
+              <LinearGradient colors={["#6366F1", "#3B82F6"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={{ width: 80, height: 80, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 12 }}>
+                <Ionicons name="shield-checkmark-outline" size={32} color="#FFFFFF" />
+              </LinearGradient>
+              <Text style={{ fontSize: 28, fontWeight: '800', color: '#1f2937', marginBottom: 8, letterSpacing: -0.5 }}>Verify Your OTP</Text>
+              <Text style={{ fontSize: 16, color: '#6b7280', textAlign: 'center', lineHeight: 24 }}>Enter the 6-digit code sent to you</Text>
+            </View>
+            {/* OTP Boxes */}
+            <View style={{ marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {Array.from({ length: OTP_LENGTH }).map((_, i) => renderBox(i))}
+              </View>
+            </View>
+            {/* Hidden Input */}
+            <TextInput
+              ref={hiddenInputRef}
+              value={code}
+              onChangeText={handleChange}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              autoComplete="one-time-code"
+              maxLength={OTP_LENGTH}
+              style={{ position: 'absolute', opacity: 0.01, height: 1, width: 1, bottom: 0, left: 0 }}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              autoFocus
+              showSoftInputOnFocus
+              caretHidden
+              contextMenuHidden
+              underlineColorAndroid="transparent"
+              blurOnSubmit={false}
+              editable
+              importantForAutofill="yes"
+              autoCorrect={false}
+              focusable
+              disableFullscreenUI
+            />
+            {/* Resend */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24, marginTop: 8 }}>
+              <Text style={{ color: '#6b7280', fontSize: 14 }}>Didn't receive the code? </Text>
+              <TouchableOpacity
+                disabled={resendTimer > 0}
+                onPress={handleResend}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: resendTimer > 0 ? '#9ca3af' : '#6366F1', fontSize: 14, fontWeight: '700' }}>
+                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {/* Verify Button */}
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+              <TouchableOpacity
+                onPressIn={animatePress}
+                onPressOut={animateRelease}
+                onPress={handleVerify}
+                disabled={isLoading || code.length !== OTP_LENGTH}
+                activeOpacity={0.9}
+                style={{ borderRadius: 16, width: '100%', shadowColor: '#6366F1', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 12 }}
+              >
+                <LinearGradient
+                  colors={isLoading || code.length !== OTP_LENGTH ? ['#c7d2fe', '#dbeafe'] : ['#6366F1', '#3B82F6']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ paddingVertical: 18, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', opacity: isLoading ? 0.9 : 1 }}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-circle-outline" size={22} color="#fff" />
+                      <Text style={{ color: 'white', fontSize: 17, fontWeight: '700', marginLeft: 12, letterSpacing: -0.2 }}>Verify</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+            {/* Footer */}
+            <View style={{ alignItems: 'center', marginTop: 24 }}>
+              <Text style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', lineHeight: 20, fontWeight: '500' }}>
+                Enter the code to continue. Make sure you typed it correctly.
+              </Text>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
+export default Validate;

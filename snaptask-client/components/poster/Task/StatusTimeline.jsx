@@ -1,39 +1,137 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Text, View, TouchableOpacity, Animated } from 'react-native';
-const StatusTimeline = ({ timeline }) => {
+import { Text, View, TouchableOpacity } from 'react-native';
+
+const StatusTimeline = ({ status, postedOn, deadline }) => {
+  // Generate timeline based on status
+  const generateTimeline = () => {
+    const baseStages = [
+      { stage: 'Created', description: 'Task has been created and published' },
+      { stage: 'Assigned', description: 'Looking for the right candidate' },
+      { stage: 'Completed', description: 'Task successfully delivered' }
+    ];
+
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
+
+    switch (status) {
+      case 'PENDING':
+        return [
+          { 
+            stage: 'Created', 
+            description: 'Task has been created and published',
+            completed: true,
+            date: postedOn ? new Date(postedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : currentDate
+          },
+          { 
+            stage: 'Assigned', 
+            description: 'Looking for the right candidate',
+            completed: false,
+            date: ''
+          },
+          { 
+            stage: 'Completed', 
+            description: 'Task successfully delivered',
+            completed: false,
+            date: ''
+          }
+        ];
+
+      case 'ACTIVE':
+        return [
+          { 
+            stage: 'Created', 
+            description: 'Task has been created and published',
+            completed: true,
+            date: postedOn ? new Date(postedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : currentDate
+          },
+          { 
+            stage: 'Assigned', 
+            description: 'Work is currently in progress',
+            completed: true,
+            date: currentDate
+          },
+          { 
+            stage: 'Completed', 
+            description: 'Task successfully delivered',
+            completed: false,
+            date: deadline ? new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
+          }
+        ];
+
+      case 'COMPLETED':
+        return [
+          { 
+            stage: 'Created', 
+            description: 'Task has been created and published',
+            completed: true,
+            date: postedOn ? new Date(postedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : currentDate
+          },
+          { 
+            stage: 'Assigned', 
+            description: 'Task was assigned and worked on',
+            completed: true,
+            date: currentDate
+          },
+          { 
+            stage: 'Completed', 
+            description: 'Task successfully delivered',
+            completed: true,
+            date: currentDate
+          }
+        ];
+
+      default:
+        return baseStages.map(stage => ({ ...stage, completed: false, date: '' }));
+    }
+  };
+
+  const timeline = generateTimeline();
+
   const getStageGradient = (completed, isCurrent) => {
     if (completed) return ['#10B981', '#059669', '#047857'];
     if (isCurrent) return ['#3B82F6', '#6366F6', '#8B5CF6'];
     return ['#6B7280', '#4B5563'];
   };
+
   const getStageIcon = (stage, completed, isCurrent) => {
     if (completed) return 'checkmark-circle';
     const icons = {
       'Created': 'document-text',
       'Assigned': 'person',
-      'In Progress': 'rocket',
-      'Pending Review': 'time',
       'Completed': 'trophy'
     };
     return isCurrent ? icons[stage] || 'ellipse' : 'ellipse-outline';
   };
-  const getStageDescription = (stage) => {
-    const descriptions = {
-      'Created': 'Task has been created and published',
-      'Assigned': 'Looking for the right candidate',
-      'In Progress': 'Work is currently underway',
-      'Pending Review': 'Waiting for your approval',
-      'Completed': 'Task successfully delivered'
-    };
-    return descriptions[stage] || 'Next stage in progress';
-  };
+
   const calculateProgress = () => {
     const completedStages = timeline.filter(stage => stage.completed).length;
     return (completedStages / timeline.length) * 100;
   };
+
   const progress = calculateProgress();
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'COMPLETED': return '#10B981';
+      case 'ACTIVE': return '#3B82F6';
+      case 'PENDING': return '#F59E0B';
+      default: return '#6B7280';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (status) {
+      case 'COMPLETED': return 'Completed';
+      case 'ACTIVE': return 'In Progress';
+      case 'PENDING': return 'Pending';
+      default: return 'Unknown';
+    }
+  };
+
   return (
     <View style={{
       backgroundColor: '#ffffff',
@@ -95,7 +193,7 @@ const StatusTimeline = ({ timeline }) => {
                 color: '#6b7280',
                 fontWeight: '600'
               }}>
-                {Math.round(progress)}% completed
+                {Math.round(progress)}% completed • {getStatusText()}
               </Text>
             </View>
           </View>
@@ -110,12 +208,13 @@ const StatusTimeline = ({ timeline }) => {
             <Text style={{
               fontSize: 14,
               fontWeight: '700',
-              color: '#0369a1'
+              color: getStatusColor()
             }}>
-              {timeline.filter(stage => stage.completed).length}/{timeline.length} stages
+              {getStatusText()}
             </Text>
           </View>
         </View>
+
         {/* Progress Bar */}
         <View style={{ marginBottom: 24 }}>
           <View style={{ 
@@ -149,11 +248,13 @@ const StatusTimeline = ({ timeline }) => {
             />
           </View>
         </View>
+
         {/* Timeline Stages */}
         <View style={{ gap: 16 }}>
           {timeline.map((stage, index) => {
             const isCurrent = !stage.completed && index === timeline.findIndex(s => !s.completed);
             const isUpcoming = !stage.completed && !isCurrent;
+            
             return (
               <TouchableOpacity 
                 key={stage.stage}
@@ -206,6 +307,7 @@ const StatusTimeline = ({ timeline }) => {
                     }} />
                   )}
                 </View>
+
                 {/* Stage Content */}
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
@@ -245,7 +347,7 @@ const StatusTimeline = ({ timeline }) => {
                     lineHeight: 20,
                     marginBottom: 8
                   }}>
-                    {getStageDescription(stage.stage)}
+                    {stage.description}
                   </Text>
                   {stage.date && (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -269,6 +371,7 @@ const StatusTimeline = ({ timeline }) => {
             );
           })}
         </View>
+
         {/* Timeline Legend */}
         <View style={{ 
           flexDirection: 'row', 
@@ -300,4 +403,5 @@ const StatusTimeline = ({ timeline }) => {
     </View>
   );
 };
+
 export default StatusTimeline;

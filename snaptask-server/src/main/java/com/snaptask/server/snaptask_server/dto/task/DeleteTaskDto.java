@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeleteTaskDto {
-
     @NotBlank(message = "Task ID cannot be blank")
     private String taskId;
 }

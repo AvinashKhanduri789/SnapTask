@@ -5,57 +5,74 @@ import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_layout';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    Animated,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api } from "../../util/requester"
+import { useApi } from "../../util/useApi"
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState('');
   const buttonScale = new Animated.Value(1);
   const inputScale = new Animated.Value(1);
   const router = useRouter();
 
-   const { setUserData } = useAuth();
-
+  const { request, isLoading } = useApi();
+  const { setUserData } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email');
-      return;
-    }
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      const mockUser = {
-      email: "khanduria11@gmail.com",
-      username: "avinash.khanduri",
-      role: "POSTER", // or SEEKER
-      token: "mock-jwt-token",
-    };
 
-    setUserData(mockUser);
-    }, 1500);
+    if (!isValidEmail(email)) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    try {
+      // 1️⃣ Send login request
+      const response = await request(
+        api.post("/auth/login", { email, password })
+      );
+
+      if (!response.ok) {
+        Alert.alert("Login failed", response.error?.data || "Invalid credentials");
+        return;
+      }
+
+      // 2️⃣ Extract user info + token
+      const user = response.data; // should contain { email, username, role, token }
+      // 3️⃣ Save to AsyncStorage
+      await AsyncStorage.setItem("userData", JSON.stringify(user));
+
+      // 4️⃣ Update global auth context
+      setUserData(user);
+
+    } catch (err) {
+      console.error("Login error:", err);
+      Alert.alert("Error", err.detail || "Something went wrong during login");
+    }
   };
+
   const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
     return emailRegex.test(email);
   };
   const animatePress = (scaleValue) => {
@@ -97,7 +114,7 @@ const Login = () => {
   const isDisabled = !email || !password || isLoading;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         style={{ flex: 1 }}
@@ -113,12 +130,12 @@ const Login = () => {
               colors={["#6366F1", "#3B82F6"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={{ 
-                width: 80, 
-                height: 80, 
-                borderRadius: 20, 
-                alignItems: 'center', 
-                justifyContent: 'center', 
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
                 marginBottom: 16,
                 shadowColor: "#6366F1",
                 shadowOffset: {
@@ -144,9 +161,9 @@ const Login = () => {
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 8, letterSpacing: -0.2 }}>
               Email Address
             </Text>
-            <Animated.View style={{ 
+            <Animated.View style={{
               transform: [{ scale: focusedField === 'email' ? inputScale : 1 }],
-              flexDirection: 'row', 
+              flexDirection: 'row',
               alignItems: 'center',
               borderWidth: 2,
               borderColor: focusedField === 'email' ? '#6366F1' : '#e5e7eb',
@@ -162,17 +179,17 @@ const Login = () => {
               shadowRadius: focusedField === 'email' ? 8 : 4,
               elevation: focusedField === 'email' ? 4 : 2,
             }}>
-              <Ionicons 
-                name="mail-outline" 
-                size={22} 
-                color={focusedField === 'email' ? '#6366F1' : '#9ca3af'} 
+              <Ionicons
+                name="mail-outline"
+                size={22}
+                color={focusedField === 'email' ? '#6366F1' : '#9ca3af'}
               />
               <TextInput
-                style={{ 
-                  flex: 1, 
-                  paddingVertical: 16, 
-                  paddingLeft: 12, 
-                  fontSize: 16, 
+                style={{
+                  flex: 1,
+                  paddingVertical: 16,
+                  paddingLeft: 12,
+                  fontSize: 16,
                   color: '#111827',
                   fontWeight: '500',
                 }}
@@ -194,9 +211,9 @@ const Login = () => {
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 8, letterSpacing: -0.2 }}>
               Password
             </Text>
-            <Animated.View style={{ 
+            <Animated.View style={{
               transform: [{ scale: focusedField === 'password' ? inputScale : 1 }],
-              flexDirection: 'row', 
+              flexDirection: 'row',
               alignItems: 'center',
               borderWidth: 2,
               borderColor: focusedField === 'password' ? '#6366F1' : '#e5e7eb',
@@ -212,13 +229,13 @@ const Login = () => {
               shadowRadius: focusedField === 'password' ? 8 : 4,
               elevation: focusedField === 'password' ? 4 : 2,
             }}>
-              <Ionicons 
-                name="key-outline" 
-                size={22} 
-                color={focusedField === 'password' ? '#6366F1' : '#9ca3af'} 
+              <Ionicons
+                name="key-outline"
+                size={22}
+                color={focusedField === 'password' ? '#6366F1' : '#9ca3af'}
               />
               <TextInput
-                style={{ 
+                style={{
                   flex: 1,
                   paddingVertical: 16,
                   paddingLeft: 12,
@@ -244,16 +261,16 @@ const Login = () => {
                 style={{ padding: 8 }}
                 activeOpacity={0.7}
               >
-                <Ionicons 
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
-                  size={22} 
-                  color={focusedField === 'password' ? '#6366F1' : '#6b7280'} 
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={22}
+                  color={focusedField === 'password' ? '#6366F1' : '#6b7280'}
                 />
               </TouchableOpacity>
             </Animated.View>
           </View>
           {/* Forgot Password */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={{ alignSelf: 'flex-end', marginBottom: 24 }}
             activeOpacity={0.7}
             onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
@@ -273,8 +290,8 @@ const Login = () => {
               }}
               disabled={isDisabled}
               activeOpacity={0.9}
-              style={{ 
-                borderRadius: 16, 
+              style={{
+                borderRadius: 16,
                 width: '100%',
                 shadowColor: "#6366F1",
                 shadowOffset: {
@@ -327,7 +344,7 @@ const Login = () => {
               onPressOut={() => animateRelease(buttonScale)}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push("/auth/register"); 
+                router.push("/auth/register");
               }}
               activeOpacity={0.9}
               style={{

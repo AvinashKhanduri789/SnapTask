@@ -57,7 +57,7 @@ public class Task {
     @Field("status")
     @Indexed
     @Builder.Default
-    private TaskStatus status = TaskStatus.NEW;
+    private TaskStatus status = TaskStatus.ACTIVE;
 
     @Field("deadline")
     @Indexed

@@ -33,12 +33,14 @@ google-services.json
 # React Native
 # ==============================
 snaptask-client/node_modules/
-/.expo/
+
 /dist/
-/android/
-/ios/
 /npm-debug.log
 yarn-error.log
+
+snaptask-client/.expo/
+snaptask-client/android/
+snaptask-client/ios/
 
 # ==============================
 # Others

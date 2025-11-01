@@ -5,8 +5,9 @@ import CategoryStep from '../TaskPageComponents/CategoryStep';
 import PaymentStep from '../TaskPageComponents/PaymentStep';
 import PreviewStep from '../TaskPageComponents/PreviewStep';
 import { Ionicons } from '@expo/vector-icons';
+import {ActivityIndicator} from 'react-native';
 
-const NewTaskForm = ({ onTaskCreated, isInBottomSheet = false }) => {
+const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
@@ -15,6 +16,7 @@ const NewTaskForm = ({ onTaskCreated, isInBottomSheet = false }) => {
     deadline: null,
     isPaid: true,
     budget: '',
+    mode: 'REMOTE'
   });
 
   const steps = [
@@ -43,7 +45,7 @@ const NewTaskForm = ({ onTaskCreated, isInBottomSheet = false }) => {
   const handleSubmit = () => {
     console.log('Form submitted:', formData);
     if (onTaskCreated) {
-      onTaskCreated();
+      onTaskCreated(formData);
     }
   };
 
@@ -161,7 +163,7 @@ const NewTaskForm = ({ onTaskCreated, isInBottomSheet = false }) => {
           ) : (
             <TouchableOpacity
               style={{
-                backgroundColor: '#10b981',
+                backgroundColor: isLoading ? '#9ca3af' : '#10b981', // gray when loading
                 paddingHorizontal: 24,
                 paddingVertical: 16,
                 borderRadius: 12,
@@ -171,14 +173,25 @@ const NewTaskForm = ({ onTaskCreated, isInBottomSheet = false }) => {
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
-                elevation: 4
+                elevation: 4,
               }}
+              disabled={isLoading}  // ✅ prevent double-submit
               onPress={handleSubmit}
             >
-              <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 16 }}>
-                🚀 Post Task
-              </Text>
+              {isLoading ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 16 }}>
+                    Posting...
+                  </Text>
+                </View>
+              ) : (
+                <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 16 }}>
+                  🚀 Post Task
+                </Text>
+              )}
             </TouchableOpacity>
+
           )}
         </View>
       </View>

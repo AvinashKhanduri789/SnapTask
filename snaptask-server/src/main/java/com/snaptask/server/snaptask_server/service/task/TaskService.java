@@ -150,7 +150,7 @@ public class TaskService {
                 .deadline(dto.getDeadline())
                 .isUnpaid(Boolean.TRUE.equals(dto.getIsUnpaid()))
                 .budget(dto.getBudget())
-                .status(TaskStatus.NEW)
+                .status(TaskStatus.ACTIVE)
                 .mode(dto.getMode())
                 .posterId(helper.getCurrentLoggedInUser().getId())
                 .bidIds(List.of())
@@ -281,6 +281,7 @@ public class TaskService {
                         .deadline(task.getDeadline())
                         .bidsCount(task.getBidsCount())
                         .status(task.getStatus())
+                        .description(task.getDescription())
                         .category(task.getCategory())
                         .createdAt(task.getPostedOn())
                         .build())
@@ -292,7 +293,7 @@ public class TaskService {
 
         PosterTasksGroupedDto groupedDto = PosterTasksGroupedDto.builder()
                 .active(grouped.getOrDefault(TaskStatus.ACTIVE, List.of()))
-                .pending(grouped.getOrDefault(TaskStatus.PENDING_REVIEW, List.of()))
+                .pending(grouped.getOrDefault(TaskStatus.PENDING, List.of()))
                 .completed(grouped.getOrDefault(TaskStatus.COMPLETED, List.of()))
                 .build();
 
@@ -317,7 +318,7 @@ public class TaskService {
         // Map bids to PosterBidSummaryDto
         List<PosterBidSummaryDto> bidDtos = bids.stream()
                 .map(bid -> PosterBidSummaryDto.builder()
-                        .bidId(bid.getId())
+                        .id(bid.getId())
                         .seekerName(bid.getSeekerName())
                         .tagline(bid.getTagline())
                         .rating(bid.getRating())
@@ -347,7 +348,6 @@ public class TaskService {
 
         return ResponseEntity.ok(taskDetailDto);
     }
-
 
     public void sendPushNotification(String expoToken, String title, String body) {
         try {

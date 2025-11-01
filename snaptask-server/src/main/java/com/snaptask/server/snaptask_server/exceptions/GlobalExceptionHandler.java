@@ -1,5 +1,6 @@
 package com.snaptask.server.snaptask_server.exceptions;
 
+import com.snaptask.server.snaptask_server.exceptions.customExceptions.JwtExpiredException;
 import com.snaptask.server.snaptask_server.exceptions.customExceptions.ResourceNotFoundException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -66,27 +68,31 @@ public class GlobalExceptionHandler {
                 request);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
     }
-
     // ---------------- JWT Exceptions ----------------
-    @ExceptionHandler({ SignatureException.class, JwtException.class })
+    @ExceptionHandler({ JwtException.class, SignatureException.class })
     public ResponseEntity<ProblemDetail> handleJwtInvalid(RuntimeException ex, HttpServletRequest request) {
-        log.warn("Invalid JWT token detected: {}", ex.getMessage(), ex);
-        ProblemDetail pd = baseProblem(HttpStatus.UNAUTHORIZED,
+        log.warn("❌ Invalid JWT token at {}: {}", request.getRequestURI(), ex.getMessage());
+        ProblemDetail pd = baseProblem(
+                HttpStatus.UNAUTHORIZED,
                 "Invalid Token",
                 "Your authentication token is invalid. Please log in again.",
-                request);
+                request
+        );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(pd);
     }
 
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<ProblemDetail> handleJwtExpired(ExpiredJwtException ex, HttpServletRequest request) {
-        log.info("Expired JWT token at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
-        ProblemDetail pd = baseProblem(HttpStatus.UNAUTHORIZED,
+    @ExceptionHandler(JwtExpiredException.class)
+    public ResponseEntity<ProblemDetail> handleJwtExpired(JwtExpiredException ex, HttpServletRequest request) {
+        log.info("⏰ Token expired at {}: {}", request.getRequestURI(), ex.getMessage());
+        ProblemDetail pd = baseProblem(
+                HttpStatus.UNAUTHORIZED,
                 "Token Expired",
                 "Your session has expired. Please sign in again.",
-                request);
+                request
+        );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(pd);
     }
+
 
     // ---------------- HTTP Method Not Supported ----------------
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -112,22 +118,39 @@ public class GlobalExceptionHandler {
 
     // ---------------- Validation Exceptions ----------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ProblemDetail> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        String errors = ex.getBindingResult()
+    public ResponseEntity<ProblemDetail> handleValidationException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
+
+        // Collect each invalid field + message
+        Map<String, String> fieldErrors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(this::formatFieldError)
-                .collect(Collectors.joining("; "));
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        FieldError::getDefaultMessage,
+                        (msg1, msg2) -> msg1 // handle duplicate keys
+                ));
 
-        log.debug("Validation failed: {}", errors, ex);
 
-        ProblemDetail pd = baseProblem(HttpStatus.BAD_REQUEST,
+        String summary = fieldErrors.values().stream().collect(Collectors.joining("; "));
+
+        log.debug("Validation failed: {}", summary, ex);
+
+        // Instead of generic message, show the real one
+        ProblemDetail pd = baseProblem(
+                HttpStatus.BAD_REQUEST,
                 "Validation Failed",
-                "Some fields contain invalid or missing values.",
-                request);
-        pd.setProperty("invalidFields", errors);
+                summary, //
+                request
+        );
+
+
+        pd.setProperty("invalidFields", fieldErrors);
+
         return ResponseEntity.badRequest().body(pd);
     }
+
 
     private String formatFieldError(FieldError fe) {
         return fe.getField() + ": " + fe.getDefaultMessage();

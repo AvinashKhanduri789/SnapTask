@@ -4,6 +4,7 @@ import com.snaptask.server.snaptask_server.dto.notification.PosterNotificationDt
 import com.snaptask.server.snaptask_server.dto.user.ProfileDto;
 import com.snaptask.server.snaptask_server.dto.user.RegisterFcmDto;
 import com.snaptask.server.snaptask_server.dto.user.SetLocationDto;
+import com.snaptask.server.snaptask_server.dto.user.UpdatePosterProfileDto;
 import com.snaptask.server.snaptask_server.service.task.TaskService;
 import com.snaptask.server.snaptask_server.service.user.UserService;
 import jakarta.validation.Valid;
@@ -56,7 +57,7 @@ public class PosterProfileController {
      * Example: PUT /poster/profile
      */
     @PutMapping
-    public ResponseEntity<String> updateProfile(@Valid @RequestBody ProfileDto dto) {
+    public ResponseEntity<String> updateProfile(@Valid @RequestBody UpdatePosterProfileDto dto) {
         return userService.updateProfile(dto);
     }
 

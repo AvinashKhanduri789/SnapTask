@@ -9,7 +9,9 @@ import java.util.List;
 @Repository
 public interface NotificationRepository extends MongoRepository<Notification, String> {
     // For POSTER
-    List<Notification> findByReceiverIdsContainingAndStatus(String userId, NotificationStatus status);
+    List<Notification> findByReceiverIdsInAndStatus(List<String> receiverIds, NotificationStatus status);
+
+
 
 
 }

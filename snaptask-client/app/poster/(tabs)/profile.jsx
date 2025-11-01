@@ -1,59 +1,191 @@
 // components/profile/ProfileScreen.js
-import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProfileHeader from '../../../components/poster/profile/ProfileHeader';
 import ProfileInfo from '../../../components/poster/profile/ProfileInfo';
 import AccountSettings from '../../../components/poster/profile/AccountSettings';
 import ActionButtons from '../../../components/poster/profile/ActionButtons';
+import { useAuth } from '../../_layout';
+import { useApi } from "../../../util/useApi";
+import { api } from "../../../util/requester";
 
 const ProfileScreen = () => {
-  const [profileData, setProfileData] = useState({
-    name: 'Avinash Khanduri',
-    email: 'avinash.khanduri@example.com',
-    phone: '+91 98765 43210',
-    college: 'Delhi Technological University',
-    location: 'New Delhi, India',
-    bio: 'Web dev student, love helping with design & code tasks.',
-    skills: 'UI Design, React Native, Tutoring, Graphic Design',
-    role: 'Poster',
-    rating: '4.8 / 5',
-    joinDate: 'Jan 2024'
-  });
-
+  const { logout } = useAuth();
+  const [profileData, setProfileData] = useState(null);
+  const { request, data, isLoading, error } = useApi();
+  const { request: updateRequest } = useApi(); // Separate instance for updates
   const [isEditing, setIsEditing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    // Save profile logic here
+  const loadProfileData = async () => {
+    await request(api.get("/poster/profile"));
+  };
+
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+
+  useEffect(() => {
+    if (data) {
+      setProfileData(data);
+    }
+  }, [data]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadProfileData();
+    setRefreshing(false);
+  };
+
+  const handleSave = async () => {
+    if (!profileData) return;
+
+    setIsSaving(true);
+    try {
+      // Prepare the data for the API call
+      const updateData = {
+        name: profileData.name,
+        phone: profileData.phone,
+        workplace: profileData.workplace,
+        bio: profileData.bio,
+        skills: profileData.skills || []
+      };
+
+      // Make direct API call without using useApi hook
+      const response = await api.put("/poster/profile", updateData);
+
+      if (response.status >= 200 && response.status < 300) {
+        // Success - exit edit mode
+        setIsEditing(false);
+        Alert.alert('Success', 'Profile updated successfully!');
+        console.log('Profile saved:', profileData);
+
+        // Refresh the data to get any server-side changes
+        await loadProfileData();
+      } else {
+        // Handle API error
+        Alert.alert('Error', 'Failed to update profile. Please try again.');
+        console.error('Profile update failed:', response);
+      }
+    } catch (err) {
+      // Handle unexpected errors
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      console.error('Profile update error:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    // Reload original data to discard changes
+    loadProfileData();
     setIsEditing(false);
-    console.log('Profile saved:', profileData);
   };
 
-  const updateProfileData = (field, value) => {
-    setProfileData(prev => ({ ...prev, [field]: value }));
-  };
+  const updateProfileData = useCallback((field, value) => {
+    setProfileData(prev => {
+      if (!prev) return prev;
+      return { ...prev, [field]: value };
+    });
+  }, []);
+
+  // Loading State - Show only during initial load when no data exists
+  if (isLoading && !profileData) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <ProfileHeader />
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#6366F1" />
+          <Text className="text-slate-600 mt-4 text-lg">Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error State - Show only if no profile data exists
+  if (error && !profileData) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <ProfileHeader />
+        <View className="flex-1 justify-center items-center px-6">
+          <View className="bg-red-50 rounded-2xl p-6 items-center border border-red-200">
+            <Text className="text-red-500 text-xl font-bold mb-2">
+              Failed to load profile
+            </Text>
+            <Text className="text-slate-600 text-center mb-4">
+              {error.message || 'Please try again later'}
+            </Text>
+            <TouchableOpacity
+              className="bg-blue-500 px-6 py-3 rounded-xl"
+              onPress={loadProfileData}
+            >
+              <Text className="text-white font-bold text-base">Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Don't render child components until profileData is available
+  if (!profileData) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <ProfileHeader />
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#6366F1" />
+          <Text className="text-slate-600 mt-4 text-lg">Loading profile data...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
       <ProfileHeader />
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#6366F1']}
+            tintColor="#6366F1"
+          />
+        }
+      >
         <View className="p-4 space-y-6">
-          <ProfileInfo 
+          <ProfileInfo
             profileData={profileData}
             isEditing={isEditing}
             updateProfileData={updateProfileData}
           />
           <AccountSettings profileData={profileData} />
-          <ActionButtons 
+          <ActionButtons
             isEditing={isEditing}
             onEdit={() => setIsEditing(true)}
             onSave={handleSave}
-            onCancel={() => setIsEditing(false)}
+            onCancel={handleCancel}
+            onLogout={logout}
+            isSaving={isSaving}
           />
         </View>
       </ScrollView>
+
+      {/* Saving Overlay */}
+      {isSaving && (
+        <View className="absolute inset-0 bg-black bg-opacity-50 justify-center items-center">
+          <View className="bg-white rounded-2xl p-6 items-center">
+            <ActivityIndicator size="large" color="#6366F1" />
+            <Text className="text-slate-600 mt-4 text-base">Saving changes...</Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
-export default ProfileScreen;
+export default ProfileScreen; 

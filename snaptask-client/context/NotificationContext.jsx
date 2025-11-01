@@ -1,11 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import {useApi} from "../util/useApi";
+import {api} from "../util/requester";
+
 
 // =========================
 // 🔹 Create Context
 // =========================
 const NotificationContext = createContext(undefined);
+
+
 
 // =========================
 // 🔹 Custom Hook
@@ -25,6 +30,7 @@ export const NotificationProvider = ({ children }) => {
   const [expoPushToken, setExpoPushToken] = useState(null);
   const [notification, setNotification] = useState(null);
   const [error, setError] = useState(null);
+  const {data, request,isLoading} = useApi();
 
   const notificationListener = useRef(null);
   const responseListener = useRef(null);
@@ -65,6 +71,17 @@ export const NotificationProvider = ({ children }) => {
 
         if (isMounted) setExpoPushToken(token);
         console.log(" Expo Push Token:", token);
+
+        
+
+        const result = await request(api.post("/poster/profile/fcm", {token}));
+
+        if (result.ok) {
+          console.log("Notification registered successfully");
+        } else {
+          console.log("Failed to register notification-->", result.error.detail);
+        }
+
       } catch (err) {
         if (isMounted) setError(err);
         console.error(" Notification setup error:", err);

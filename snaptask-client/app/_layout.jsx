@@ -1,33 +1,44 @@
 import { Stack, useRouter, Slot } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { NotificationProvider } from "../context/NotificationContext";
 import "../global.css";
+import { useApi } from "../util/useApi";
+import { api } from "../util/requester";
+import { Alert } from "react-native"; // ✅ added since you're using Alert
 
 // Auth Context
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-const GlobalAuthState = ({ children }) => {
+export const GlobalAuthState = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        // const storedUser = await AsyncStorage.getItem("userData");
-        // if (storedUser) setUserData(JSON.parse(storedUser));
+        // 1️⃣ Load user from AsyncStorage
+        const storedUser = await AsyncStorage.getItem("userData");
 
-        // Mock user for now
-        setUserData({
-          email: "khanduria11@gmail.com",
-          username: "avinash.khanduri",
-          role: "SEEKER", // or POSTER
-          token: "mock-jwt-token",
-        });
+        if (!storedUser) {
+          setLoading(false);
+          return;
+        }
+
+        const parsedUser = JSON.parse(storedUser);
+
+        // 2️⃣ Validate token directly using api.get
+        await api.get("/api/validateToken");
+
+        // 3️⃣ If token is valid, restore user
+        setUserData(parsedUser);
       } catch (err) {
-        console.warn("Error loading user:", err);
+        console.warn("❌ Token invalid or expired:", err?.detail || err);
+        Alert.alert("Session Expired", err?.detail || "Please log in again.");
+        await AsyncStorage.removeItem("userData");
+        setUserData(null);
       } finally {
         setLoading(false);
       }
@@ -36,15 +47,17 @@ const GlobalAuthState = ({ children }) => {
     loadUser();
   }, []);
 
-  useEffect(() => {
-    if (userData) {
-      console.log("User data saved:", userData);
-      // AsyncStorage.setItem("userData", JSON.stringify(userData));
+  const logout = async () => {
+    try {
+      await AsyncStorage.removeItem("userData");
+      setUserData(null);
+    } catch (error) {
+      console.error("Error during logout:", error);
     }
-  }, [userData]);
+  };
 
   return (
-    <AuthContext.Provider value={{ userData, setUserData, loading }}>
+    <AuthContext.Provider value={{ userData, setUserData, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -56,8 +69,7 @@ const AuthGate = () => {
   const { userData, loading } = useAuth();
 
   useEffect(() => {
-    if (loading) return; // wait until user data loads
-
+    if (loading) return;
     if (!userData) {
       router.replace("/auth/login");
     } else if (userData.role === "POSTER") {
@@ -70,14 +82,11 @@ const AuthGate = () => {
   return null;
 };
 
-
 // Root Layout
-
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GlobalAuthState>
-        {/* Stack Router */}
         <NotificationProvider>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />

@@ -1,1 +1,40 @@
-import React from 'react';import { View, Text, FlatList, StyleSheet } from 'react-native';import TaskCard from './TaskCard';const CompletedTasks = () => {  const completedTasks = [    {      id: '3',      title: 'Website homepage design',      status: 'completed',      createdAt: '2024-01-10',      completedAt: '2024-01-14',      budget: '₹5,000',    },  ];  const renderTaskItem = ({ item }) => (    <TaskCard task={item} type="completed" />  );  return (    <View style={styles.container}>      <FlatList        data={completedTasks}        renderItem={renderTaskItem}        keyExtractor={(item) => item.id}        contentContainerStyle={styles.listContent}        showsVerticalScrollIndicator={false}      />    </View>  );};const styles = StyleSheet.create({  container: {    flex: 1,  },  listContent: {    padding: 16,    gap: 12,  },});export default CompletedTasks;
+import React from 'react';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import TaskCard from './TaskCard';
+
+const CompletedTasks = ({data}) => {
+  const completedTasks = [
+    {
+      id: '3',
+      title: 'Website homepage design',
+      status: 'completed',
+      createdAt: '2024-01-10',
+      completedAt: '2024-01-14',
+      budget: '₹5,000',
+    },
+  ];
+  const renderTaskItem = ({ item }) => (
+    <TaskCard task={item} type="completed" />
+  );
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={data}
+        renderItem={renderTaskItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
+};
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  listContent: {
+    padding: 16,
+    gap: 12,
+  },
+});
+export default CompletedTasks;

@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { formatDate } from '../../../util/helper';
 
 const AccountSettings = ({ profileData }) => {
   const SettingItem = ({ icon, label, value, color = '#6366f1' }) => (
@@ -35,21 +36,21 @@ const AccountSettings = ({ profileData }) => {
       <SettingItem
         icon="calendar"
         label="Member Since"
-        value="Jan 2024"
+        value={formatDate(profileData.joinDate)}
         color="#f59e0b"
       />
       
       <SettingItem
         icon="document-text"
         label="Tasks Posted"
-        value="12"
+        value={profileData.taskPosted || "0"}
         color="#6366f1"
       />
       
       <SettingItem
         icon="star"
         label="Poster Rating"
-        value="4.8"
+        value={profileData.rating}
         color="#f59e0b"
       />
     </View>

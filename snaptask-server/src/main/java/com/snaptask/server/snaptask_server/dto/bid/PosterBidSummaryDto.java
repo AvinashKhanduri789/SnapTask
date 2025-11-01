@@ -14,7 +14,7 @@ import lombok.*;
 public class PosterBidSummaryDto {
 
     @NotBlank(message = "Bid ID cannot be blank")
-    private String bidId;
+    private String id;
 
     @NotBlank(message = "Seeker name cannot be blank")
     private String seekerName;

@@ -20,7 +20,6 @@ public class LoginUserDto {
 
 
     @NotBlank(message = "password required")
-    @Size(min = 8, message = "Password length should be minimum 6")
     private String password;
 
 
