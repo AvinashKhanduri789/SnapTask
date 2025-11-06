@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import {useApi} from "../util/useApi";
 import {api} from "../util/requester";
+import { useAuth } from "@/app/_layout";
 
 
 // =========================
@@ -31,9 +32,12 @@ export const NotificationProvider = ({ children }) => {
   const [notification, setNotification] = useState(null);
   const [error, setError] = useState(null);
   const {data, request,isLoading} = useApi();
-
+  const {userData} = useAuth();
   const notificationListener = useRef(null);
   const responseListener = useRef(null);
+
+  const userRole = userData?.role;
+  const profileEndpointPrefix = userRole === "POSTER" ? "poster" : "seeker";
 
   //  Configure global notification behavior
   Notifications.setNotificationHandler({
@@ -74,7 +78,7 @@ export const NotificationProvider = ({ children }) => {
 
         
 
-        const result = await request(api.post("/poster/profile/fcm", {token}));
+        const result = await request(api.post(`/${profileEndpointPrefix}/profile/fcm`, {token}));
 
         if (result.ok) {
           console.log("Notification registered successfully");

@@ -21,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.snaptask.server.snaptask_server.modals.Notification;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -156,6 +160,7 @@ public class TaskService {
                 .bidIds(List.of())
                 .bidsCount(0)
                 .postedOn(LocalDateTime.now())
+                .isAssigned(false)
                 .updatedAt(LocalDateTime.now())
                 .build();
         Task savedTask = taskRepository.save(task);
@@ -323,7 +328,6 @@ public class TaskService {
                         .tagline(bid.getTagline())
                         .rating(bid.getRating())
                         .bidAmount(bid.getBidAmount())
-                        .timeline(bid.getTimeline())
                         .message(bid.getProposal())
                         .completedTasks(bid.getCompletedTasks())
                         .build())
@@ -377,5 +381,300 @@ public class TaskService {
             System.err.println("❌ Failed to send Expo push notification: " + e.getMessage());
         }
     }
+
+
+//    ----------------------------------------
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getSeekerTaskSummery(String category) {
+        var currentUser = helper.getCurrentLoggedInUser();
+        String seekerId = currentUser.getId();
+
+        // Step 1: Fetch all unassigned tasks for the given category
+        List<Task> tasks = taskRepository.findByCategoryAndIsAssignedFalse(category);
+        log.info("getSeekerTaskSummery() called: category={}, foundTasks={}", category, tasks.size());
+
+        if (tasks.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        // Step 2: Collect taskIds to minimize DB round-trips
+        List<String> taskIds = tasks.stream()
+                .map(Task::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        // Step 3: Fetch all bids made by current seeker on these tasks
+        List<Bid> seekerBids = taskIds.isEmpty()
+                ? Collections.emptyList()
+                : bidRepository.findBySeekerIdAndTaskIdIn(seekerId, taskIds);
+
+        Set<String> biddedTaskIds = seekerBids.stream()
+                .map(Bid::getTaskId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        log.debug("Seeker={} has made bids on taskIds={}", seekerId, biddedTaskIds);
+
+        // Step 4: Map tasks to DTOs
+        List<SeekerTaskSummery> summaries = tasks.stream()
+                .map(task -> SeekerTaskSummery.builder()
+                        .id(task.getId())
+                        .title(task.getTitle())
+                        .description(task.getDescription())
+                        .budget(task.getBudget() != null ? BigDecimal.valueOf(task.getBudget()) : BigDecimal.ZERO)
+                        .location(task.getMode() != null ? task.getMode().name() : "Remote")
+                        .deadline(task.getDeadline())
+                        .postedTime(task.getPostedOn())
+                        .applicantsCount(task.getBidsCount())
+                        .skills(List.of(task.getCategory()))
+                        .status(task.getStatus() != null ? task.getStatus().name() : "UNKNOWN")
+                        .alredyMadebid(biddedTaskIds.contains(task.getId()))
+                        .build())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(summaries);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getAssignedTasksForSeeker() {
+        // Get the currently logged-in seeker
+        User seeker = helper.getCurrentLoggedInUser();
+        String seekerId = seeker.getId();
+        log.info("Fetching assigned tasks for seeker with ID: {}", seekerId);
+
+        // Fetch all tasks assigned to this seeker
+        List<Task> assignedTasks = taskRepository.findByAssignedSeekerIdAndIsAssignedTrue(seekerId);
+        log.info("Found {} assigned tasks for seeker {}", assignedTasks.size(), seekerId);
+
+        if (assignedTasks.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        List<SeekerTaskSummery> summaries = assignedTasks.stream()
+                .map(task -> SeekerTaskSummery.builder()
+                        .id(task.getId())
+                        .title(task.getTitle())
+                        .description(task.getDescription())
+                        .budget(task.getBudget() != null ? BigDecimal.valueOf(task.getBudget()) : BigDecimal.ZERO)
+                        .location(task.getMode() != null ? task.getMode().name() : "Remote")
+                        .deadline(task.getDeadline())
+                        .postedTime(task.getPostedOn())
+                        .applicantsCount(task.getBidsCount())
+                        .skills(List.of(task.getCategory()))
+                        .status(task.getStatus() != null ? task.getStatus().name() : "UNKNOWN")
+                        .build())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(summaries);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getCompletedTasksForSeeker() {
+        // Get the currently logged-in seeker
+        User seeker = helper.getCurrentLoggedInUser();
+        String seekerId = seeker.getId();
+        log.info("Fetching completed tasks for seeker with ID: {}", seekerId);
+
+        // Fetch all completed tasks assigned to this seeker
+        List<Task> completedTasks = taskRepository.findByAssignedSeekerIdAndStatus(seekerId, TaskStatus.COMPLETED);
+        log.info("Found {} completed tasks for seeker {}", completedTasks.size(), seekerId);
+
+        if (completedTasks.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        // Map to summary DTO
+        List<SeekerTaskSummery> summaries = completedTasks.stream()
+                .map(task -> SeekerTaskSummery.builder()
+                        .id(task.getId())
+                        .title(task.getTitle())
+                        .description(task.getDescription())
+                        .budget(task.getBudget() != null ? BigDecimal.valueOf(task.getBudget()) : BigDecimal.ZERO)
+                        .location(task.getMode() != null ? task.getMode().name() : "Remote")
+                        .deadline(task.getDeadline())
+                        .postedTime(task.getPostedOn())
+                        .applicantsCount(task.getBidsCount())
+                        .skills(List.of(task.getCategory()))
+                        .status(task.getStatus() != null ? task.getStatus().name() : "UNKNOWN")
+                        .build())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(summaries);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getSeekerTaskDetails(String id) {
+
+        Optional<Task> optionalTask = taskRepository.findById(id);
+        if (optionalTask.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Task not found", "taskId", id));
+        }
+
+        Task task = optionalTask.get();
+
+        Optional<User> posterOpt = userRepository.findById(task.getPosterId());
+        if (posterOpt.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Poster not found", "posterId", task.getPosterId()));
+        }
+
+        User poster = posterOpt.get();
+
+
+        var currentUser = helper.getCurrentLoggedInUser();
+        String seekerId = currentUser.getId();
+
+
+        boolean alreadyMadeBid = bidRepository.existsByTaskIdAndSeekerId(task.getId(), seekerId);
+
+        SeekerTaskDetail dto = SeekerTaskDetail.builder()
+                .id(task.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .budget(BigDecimal.valueOf(task.getBudget() != null ? task.getBudget() : 0))
+                .location(task.getMode() != null ? task.getMode().name() : "Remote")
+                .deadline(task.getDeadline() != null ? task.getDeadline().toString() : "N/A")
+                .applicants(task.getBidsCount() + " applicants")
+                .skills(List.of()) // can populate later if needed
+                .status(task.getStatus().name().toLowerCase())
+                .projectType("Freelance")
+                .postedBy(SeekerTaskDetail.PostedBy.builder()
+                        .name(poster.getName())
+                        .role(poster.getRole() != null ? poster.getRole().name() : "Unknown")
+                        .experience(poster.getWorkplace() != null ? poster.getWorkplace() : "Not specified")
+                        .rating(poster.getRating())
+                        .completedTasks(poster.getCompletedTasks())
+                        .responseTime(poster.getBio() != null ? poster.getBio() : "N/A")
+                        .memberSince(poster.getJoinDate() != null
+                                ? poster.getJoinDate().getMonth() + " " + poster.getJoinDate().getYear()
+                                : "N/A")
+                        .build())
+                .alredyMadebid(alreadyMadeBid)
+                .build();
+
+        return ResponseEntity.ok(dto);
+    }
+
+    public ResponseEntity<?> makeBid(CreateBidDto createBidDto) {
+        User seeker = helper.getCurrentLoggedInUser();
+        Optional<Task> optionalTask = taskRepository.findById(createBidDto.getTaskId());
+        if (optionalTask.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Task not found"));
+        }
+        Task task = optionalTask.get();
+
+        boolean alreadyBid = bidRepository.existsByTaskIdAndSeekerId(task.getId(), seeker.getId());
+        if (alreadyBid) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "You have already placed a bid on this task."));
+        }
+
+        Bid bid = Bid.builder()
+                .taskId(task.getId())
+                .seekerId(seeker.getId())
+                .seekerName(seeker.getName())
+                .tagline(createBidDto.getTagline())
+                .bio(seeker.getBio())
+                .rating(seeker.getRating())
+                .completedTasks(seeker.getCompletedTasks())
+                .bidAmount(createBidDto.getBidAmount())
+                .proposal(createBidDto.getProposal())
+                .skills(seeker.getSkills())
+                .similarWorks(createBidDto.getSimilarWorks())
+                .portfolio(createBidDto.getPortfolio())
+                .canCompleteInTime(createBidDto.isCanCompleteInTime())
+                .memberSince(seeker.getJoinDate().toString())
+                .communicationPreference(createBidDto.getCommunicationPreference())
+                .communicationDetail(createBidDto.getCommunicationDetail())
+                .bidStatus(BidStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        Bid savedBid = bidRepository.save(bid);
+
+        task.setBidIds(List.of(savedBid.getId()));
+        task.setBidsCount(task.getBidsCount()+1);
+        taskRepository.save(task);
+
+        Notification notification = Notification.builder()
+                .receiverIds(List.of(task.getPosterId()))
+                .senderId(seeker.getId())
+                .senderName(seeker.getName())
+                .taskId(task.getId())
+                .taskTitle(task.getTitle())
+                .message(seeker.getName() + " placed a new bid on your task \"" + task.getTitle() + "\".")
+                .type(NotificationType.BID)
+                .status(NotificationStatus.NEW)
+                .userRole(UserRole.SEEKER)
+                .targetRole(UserRole.POSTER)
+                .seekerName(seeker.getName())
+                .seekerRating(seeker.getRating())
+                .completedTasks(seeker.getCompletedTasks())
+                .bidAmount(String.valueOf(createBidDto.getBidAmount()))
+                .timeline(createBidDto.isCanCompleteInTime() ? "Can complete on time" : "May need more time")
+                .budget(task.getBudget().toString())
+                .deadline(task.getDeadline().toString())
+                .createdAt(Instant.now())
+                .build();
+
+        try {
+            notificationRepository.save(notification);
+        } catch (Exception e) {
+            log.error("Failed to save notification entity: {}", e.getMessage());
+        }
+
+
+        try {
+            Optional<User> posterOpt = userRepository.findById(task.getPosterId());
+            if (posterOpt.isPresent()) {
+                User poster = posterOpt.get();
+                if (poster.getFcmToken() != null && !poster.getFcmToken().isBlank()) {
+                    Map<String, Object> data = Map.of(
+                            "type", "BID",
+                            "taskId", task.getId(),
+                            "taskTitle", task.getTitle(),
+                            "bidId", bid.getId(),
+                            "seekerName", seeker.getName()
+                    );
+
+                    // @Async call → non-blocking
+                    expoPushService.sendNotification(
+                            poster.getFcmToken(),
+                            "New Bid Received 💼",
+                            seeker.getName() + " placed a new bid on your task \"" + task.getTitle() + "\".",
+                            data
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to send Expo notification: {}", e.getMessage());
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Bid placed successfully!",
+                "bidId", savedBid.getId(),
+                "taskId", task.getId()
+        ));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

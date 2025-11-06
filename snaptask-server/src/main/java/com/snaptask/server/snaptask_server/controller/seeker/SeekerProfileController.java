@@ -1,6 +1,7 @@
-package com.snaptask.server.snaptask_server.controller.poster;
+package com.snaptask.server.snaptask_server.controller.seeker;
 
 import com.snaptask.server.snaptask_server.dto.notification.PosterNotificationDto;
+import com.snaptask.server.snaptask_server.dto.notification.SeekerNotificationDto;
 import com.snaptask.server.snaptask_server.dto.user.ProfileDto;
 import com.snaptask.server.snaptask_server.dto.user.RegisterFcmDto;
 import com.snaptask.server.snaptask_server.dto.user.SetLocationDto;
@@ -8,18 +9,18 @@ import com.snaptask.server.snaptask_server.dto.user.UpdatePosterProfileDto;
 import com.snaptask.server.snaptask_server.service.task.TaskService;
 import com.snaptask.server.snaptask_server.service.user.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/poster/profile")
-public class PosterProfileController {
+@RequestMapping("/seeker/profile")
+public class SeekerProfileController {
+
     private final UserService userService;
     private final TaskService taskService;
-    public PosterProfileController(
+    public SeekerProfileController(
             UserService userService,
             TaskService taskService
     ){
@@ -61,15 +62,8 @@ public class PosterProfileController {
      * Example: GET /poster/profile/notifications
      */
     @GetMapping("/notifications")
-    public ResponseEntity<List<PosterNotificationDto>> getPosterNotifications() {
-        return userService.getAllPosterNotifications();
+    public ResponseEntity<List<SeekerNotificationDto>> getSeekerNotification() {
+        return userService.getAllSeekerNotifications();
     }
-
-//    test controller
-     @PostMapping("/test")
-    public String testPushNotification(@RequestParam String token){
-        taskService.sendPushNotification(token, "this is test title ", "working fine ");
-        return "notfication send successfully";
-     }
 
 }

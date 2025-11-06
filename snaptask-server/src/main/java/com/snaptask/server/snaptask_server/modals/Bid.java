@@ -46,8 +46,6 @@ public class Bid {
     @Field("bid_amount")
     private double bidAmount;
 
-    @Field("timeline")
-    private String timeline;
 
     @Field("proposal")
     private String proposal;
@@ -55,11 +53,17 @@ public class Bid {
     @Field("skills")
     private List<String> skills;
 
+    @Field("similarWorks")
+    private List<String> similarWorks;
+
     @Field("portfolio")
     private String portfolio;
 
     @Field("response_time")
     private String responseTime;
+
+    @Field("canCompleteInTime")
+    private boolean canCompleteInTime;
 
     @Field("success_rate")
     private String successRate;
@@ -75,4 +79,10 @@ public class Bid {
 
     @Field("status")
     private BidStatus bidStatus;
+
+    @Field("communicationPreference")
+    private String communicationPreference;
+
+    @Field("communicationDetail")
+    private String communicationDetail;
 }

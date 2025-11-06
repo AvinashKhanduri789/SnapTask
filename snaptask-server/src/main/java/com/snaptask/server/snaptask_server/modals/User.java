@@ -86,6 +86,9 @@ public class User implements UserDetails {
     @Field("role")
     private UserRole role;
 
+    @Field("completedTask")
+    private int completedTasks;
+
     @Field("fcmToken")
     private String fcmToken;
 

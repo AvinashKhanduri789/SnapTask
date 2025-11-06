@@ -28,29 +28,48 @@
     return config;
   });
 
-  // --- Normalize all responses ---
-  api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      const status = error?.response?.status || 0;
-      const data = error?.response?.data || {};
-
-      const normalized = {
-        ok: false,
-        status,
-        title: data.title || "Error",
-        detail:
-          data.detail ||
-          data.message ||
-          "Something went wrong. Please try again later.",
-        path: data.path || "N/A",
-        timestamp: data.timestamp || new Date().toISOString(),
+// --- Normalize all responses ---
+api.interceptors.response.use(
+  (response) => {
+   
+    if (response.status === 304) {
+      return {
+        ...response,
+        data: response.data || { message: "No changes detected" },
+        status: 200 
       };
-
-      return Promise.reject(normalized);
     }
-  );
+    return response;
+  },
+  (error) => {
+    const status = error?.response?.status || 0;
+  
+    if (status === 304) {
+      const successResponse = {
+        ok: true,
+        status: 200,
+        data: { message: "No changes needed" }
+      };
+      return Promise.resolve(successResponse);
+    }
+    
+    const data = error?.response?.data || {};
 
+    const normalized = {
+      ok: false,
+      status,
+      title: data.title || "Error",
+      detail:
+        data.detail ||
+        data.message ||
+        "Something went wrong. Please try again later.",
+      path: data.path || "N/A",
+      timestamp: data.timestamp || new Date().toISOString(),
+    };
+
+    return Promise.reject(normalized);
+  }
+);
   export default api;
 
 

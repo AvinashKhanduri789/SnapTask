@@ -1,56 +1,110 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Modal, RefreshControl, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useApi } from '../../../util/useApi';
+import { api } from '../../../util/requester';
+import StatusModal from '../../../components/common/StatusModal';
 
 const Notifications = () => {
   const router = useRouter();
+  const { request, isLoading, error } = useApi();
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Example notifications for Seeker
-  const notifications = [
-    {
-      id: '1',
-      type: 'bid',
-      taskId: '101',
-      posterName: 'Ananya Verma',
-      taskTitle: 'Design Landing Page for Portfolio',
-      time: '1 hour ago',
-      posterRating: 4.9,
-      postedOn: 'Oct 17, 2025',
-      message:
-        'New bid opportunity available for "Design Landing Page for Portfolio". Check out details and apply soon!',
-      budget: '₹2,000',
-      deadline: '3 days left',
-      status: 'new',
-    },
-    {
-      id: '2',
-      type: 'update',
-      taskId: '102',
-      posterName: 'Rohit Mehta',
-      taskTitle: 'App UI Revamp Project',
-      time: '5 hours ago',
-      message:
-        'Poster has updated the deadline for your assigned task. Please review the new timeline before submission.',
-      updateInfo: 'New deadline: Oct 20, 2025',
-      status: 'updated',
-    },
-    {
-      id: '3',
-      type: 'update',
-      taskId: '103',
-      posterName: 'Sneha Kapoor',
-      taskTitle: 'E-commerce API Integration',
-      time: '1 day ago',
-      message:
-        'Poster added additional feature requirements for the checkout flow. Kindly review the new description.',
-      updateInfo: 'Added “Discount Code” and “Wishlist” modules.',
-      status: 'updated',
-    },
-  ];
+  // State for StatusModal
+  const [modalConfig, setModalConfig] = useState({
+    visible: false,
+    status: '',
+    title: '',
+    message: '',
+    primaryActionLabel: 'OK'
+  });
+
+  // Fetch notifications on component mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await request(api.get('/seeker/profile/notifications'));
+      
+      if (response.ok) {
+        setNotifications(response.data);
+      } else {
+        handleApiError(response.error);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      showErrorModal('Failed to load notifications. Please try again.');
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchNotifications();
+    setRefreshing(false);
+  }, []);
+
+  // Consistent error handler
+  const handleApiError = (error) => {
+    console.log('API Error:', error);
+    
+    switch (error?.status) {
+      case 401:
+        showUnauthorizedModal();
+        break;
+      case 403:
+        showErrorModal(error.detail || "You don't have permission to view notifications.");
+        break;
+      case 404:
+        showErrorModal(error.detail || "No notifications found.");
+        break;
+      case 500:
+        showErrorModal("Server error. Please try again later.");
+        break;
+      default:
+        showErrorModal(error?.detail || "Failed to load notifications. Please try again.");
+    }
+  };
+
+  const showErrorModal = (errorMessage) => {
+    setModalConfig({
+      visible: true,
+      status: 'error',
+      title: 'Error',
+      message: errorMessage,
+      primaryActionLabel: 'Try Again'
+    });
+  };
+
+  const showUnauthorizedModal = () => {
+    setModalConfig({
+      visible: true,
+      status: 401,
+      title: 'Session Expired',
+      message: 'Please sign in again to continue.',
+      primaryActionLabel: 'Sign In'
+    });
+  };
+
+  const handleModalClose = () => {
+    setModalConfig(prev => ({ ...prev, visible: false }));
+  };
+
+  const handleModalPrimaryAction = () => {
+    setModalConfig(prev => ({ ...prev, visible: false }));
+    
+    if (modalConfig.status === 401) {
+      router.replace('/auth/login');
+    } else if (modalConfig.status === 'error') {
+      fetchNotifications();
+    }
+  };
 
   const handleNotificationPress = (notification) => {
     setSelectedNotification(notification);
@@ -83,6 +137,48 @@ const Notifications = () => {
     }
   };
 
+  // Format time function
+  const formatTime = (timestamp) => {
+    // You might need to adjust this based on your API response format
+    if (!timestamp) return 'Recently';
+    
+    const now = new Date();
+    const notificationTime = new Date(timestamp);
+    const diffInHours = Math.floor((now - notificationTime) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  };
+
+  if (isLoading && !refreshing && notifications.length === 0) {
+    return (
+      <View className="flex-1 bg-slate-50 justify-center items-center">
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text className="text-slate-600 mt-4">Loading notifications...</Text>
+      </View>
+    );
+  }
+
+  if (error && notifications.length === 0) {
+    return (
+      <View className="flex-1 bg-slate-50 justify-center items-center px-6">
+        <Ionicons name="notifications-off" size={64} color="#94a3b8" />
+        <Text className="text-slate-600 text-lg text-center mb-4">
+          Failed to load notifications
+        </Text>
+        <TouchableOpacity 
+          onPress={fetchNotifications}
+          className="bg-blue-500 px-6 py-3 rounded-lg"
+        >
+          <Text className="text-white font-semibold">Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-slate-50">
       {/* Header */}
@@ -99,12 +195,20 @@ const Notifications = () => {
               Notifications
             </Text>
             <Text className="text-purple-100 text-base font-medium">
-              Updates and new bids
+              {notifications.length} unread notifications
             </Text>
           </View>
-          <View className="bg-white/20 rounded-2xl p-3">
-            <Ionicons name="notifications" size={24} color="#ffffff" />
-          </View>
+          <TouchableOpacity 
+            onPress={fetchNotifications}
+            className="bg-white/20 rounded-2xl p-3"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Ionicons name="refresh" size={24} color="#ffffff" />
+            )}
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
@@ -114,65 +218,85 @@ const Notifications = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 30 }}
         style={{ marginTop: -20, zIndex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#6366F1']}
+            tintColor="#6366F1"
+          />
+        }
       >
         <View className="px-4 space-y-4">
-          {notifications.map((notification) => {
-            const config = getNotificationConfig(notification.type);
-            return (
-              <TouchableOpacity
-                key={notification.id}
-                className="bg-white rounded-2xl overflow-hidden"
-                onPress={() => handleNotificationPress(notification)}
-                activeOpacity={0.9}
-                style={{
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 12,
-                  elevation: 5,
-                }}
-              >
-                <LinearGradient
-                  colors={config.gradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="h-1 w-full"
-                />
-                <View className="p-5 flex-row items-start">
-                  {/* Icon */}
+          {notifications.length === 0 ? (
+            <View className="bg-white rounded-2xl p-8 items-center justify-center">
+              <Ionicons name="notifications-off" size={48} color="#94a3b8" />
+              <Text className="text-slate-600 text-lg text-center mt-4">
+                No notifications yet
+              </Text>
+              <Text className="text-slate-400 text-sm text-center mt-2">
+                You'll see notifications here when you have new bids or updates
+              </Text>
+            </View>
+          ) : (
+            notifications.map((notification) => {
+              const config = getNotificationConfig(notification.type);
+              return (
+                <TouchableOpacity
+                  key={notification.id}
+                  className="bg-white rounded-2xl overflow-hidden"
+                  onPress={() => handleNotificationPress(notification)}
+                  activeOpacity={0.9}
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 12,
+                    elevation: 5,
+                  }}
+                >
                   <LinearGradient
                     colors={config.gradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    className="w-12 h-12 rounded-xl items-center justify-center mr-4"
-                  >
-                    <Ionicons name={config.icon} size={22} color="#fff" />
-                  </LinearGradient>
+                    className="h-1 w-full"
+                  />
+                  <View className="p-5 flex-row items-start">
+                    {/* Icon */}
+                    <LinearGradient
+                      colors={config.gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      className="w-12 h-12 rounded-xl items-center justify-center mr-4"
+                    >
+                      <Ionicons name={config.icon} size={22} color="#fff" />
+                    </LinearGradient>
 
-                  {/* Content */}
-                  <View className="flex-1">
-                    <Text className="text-lg font-bold text-slate-800 mb-1">
-                      {config.title}
-                    </Text>
-                    <Text className="text-slate-600 text-sm mb-2">
-                      <Text className="font-semibold text-slate-800">
-                        {notification.posterName}
-                      </Text>{' '}
-                      {config.subtitle}
-                    </Text>
-                    <View className="bg-slate-50 rounded-xl px-3 py-2 mb-3 border border-slate-200">
-                      <Text className="text-slate-700 font-semibold text-sm">
-                        "{notification.taskTitle}"
+                    {/* Content */}
+                    <View className="flex-1">
+                      <Text className="text-lg font-bold text-slate-800 mb-1">
+                        {config.title}
+                      </Text>
+                      <Text className="text-slate-600 text-sm mb-2">
+                        <Text className="font-semibold text-slate-800">
+                          {notification.posterName}
+                        </Text>{' '}
+                        {config.subtitle}
+                      </Text>
+                      <View className="bg-slate-50 rounded-xl px-3 py-2 mb-3 border border-slate-200">
+                        <Text className="text-slate-700 font-semibold text-sm">
+                          "{notification.taskTitle}"
+                        </Text>
+                      </View>
+                      <Text className="text-slate-600 text-xs">
+                        {formatTime(notification.timestamp || notification.time)}
                       </Text>
                     </View>
-                    <Text className="text-slate-600 text-xs">
-                      {notification.time}
-                    </Text>
                   </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
       </ScrollView>
 
@@ -237,7 +361,7 @@ const Notifications = () => {
                         {getNotificationConfig(selectedNotification.type).title}
                       </Text>
                       <Text className="text-slate-500 text-sm mt-1">
-                        {selectedNotification.time}
+                        {formatTime(selectedNotification.timestamp || selectedNotification.time)}
                       </Text>
                     </View>
                   </View>
@@ -306,6 +430,18 @@ const Notifications = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Status Modal */}
+      <StatusModal
+        visible={modalConfig.visible}
+        onClose={handleModalClose}
+        status={modalConfig.status}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        primaryActionLabel={modalConfig.primaryActionLabel}
+        onPrimaryAction={handleModalPrimaryAction}
+        showCloseButton={modalConfig.status !== 401}
+      />
     </View>
   );
 };

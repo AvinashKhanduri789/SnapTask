@@ -11,16 +11,19 @@ import { useApi } from "../../../util/useApi";
 import { api } from "../../../util/requester";
 
 const ProfileScreen = () => {
-  const { logout } = useAuth();
+  const { logout,userData } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const { request, data, isLoading, error } = useApi();
-  const { request: updateRequest } = useApi(); // Separate instance for updates
+  const { request: updateRequest } = useApi(); 
   const [isEditing, setIsEditing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const userRole = userData?.role;
+  const profileEndpointPrefix = userRole === "POSTER" ? "poster" : "seeker";
+
   const loadProfileData = async () => {
-    await request(api.get("/poster/profile"));
+    await request(api.get(`/${profileEndpointPrefix}/profile`));
   };
 
   useEffect(() => {
@@ -50,33 +53,35 @@ const ProfileScreen = () => {
         phone: profileData.phone,
         workplace: profileData.workplace,
         bio: profileData.bio,
-        skills: profileData.skills || []
+        skills: profileData.skills || [],
+        
       };
 
-      // Make direct API call without using useApi hook
-      const response = await api.put("/poster/profile", updateData);
+     
+      const response = await api.put(`/${profileEndpointPrefix}/profile`, updateData);
 
       if (response.status >= 200 && response.status < 300) {
-        // Success - exit edit mode
+        
         setIsEditing(false);
-        Alert.alert('Success', 'Profile updated successfully!');
         console.log('Profile saved:', profileData);
 
-        // Refresh the data to get any server-side changes
+        
         await loadProfileData();
       } else {
-        // Handle API error
+        
         Alert.alert('Error', 'Failed to update profile. Please try again.');
-        console.error('Profile update failed:', response);
+        // console.error('Profile update failed:', response);
       }
     } catch (err) {
-      // Handle unexpected errors
+      
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      console.error('Profile update error:', err);
+      console.log(err);
     } finally {
       setIsSaving(false);
     }
   };
+
+
 
   const handleCancel = () => {
     // Reload original data to discard changes

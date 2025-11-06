@@ -175,7 +175,7 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
                 shadowRadius: 8,
                 elevation: 4,
               }}
-              disabled={isLoading}  // ✅ prevent double-submit
+              disabled={isLoading}  
               onPress={handleSubmit}
             >
               {isLoading ? (

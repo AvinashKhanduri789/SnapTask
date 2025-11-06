@@ -98,19 +98,18 @@ const TaskDetail = () => {
           <BidsSection
             bids={taskData.bidsList || []}
             onViewBid={(bid) => {
-              console.log("Viewing bid:", bid);
-              router.push(`/poster/seekerProfile/${bid.bidId}`);
+              router.push(`/poster/bidDetails/${bid.bidId}`);
             }}
           />
         </View>
       </ScrollView>
 
-      {/* Action Buttons - Pass the refresh function */}
+      
       <ActionButtons 
         taskId={taskData.id} 
         status={taskData.status} 
         taskData={taskData}
-        onTaskUpdate={handleTaskUpdate} // Pass the refresh function
+        onTaskUpdate={handleTaskUpdate} 
       />
     </SafeAreaView>
   );

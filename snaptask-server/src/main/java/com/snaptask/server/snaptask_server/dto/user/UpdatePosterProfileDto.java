@@ -31,4 +31,6 @@ public class UpdatePosterProfileDto {
 
     @Size(max = 500, message = "Skills cannot exceed 500 characters")
     private List<String> skills;
+
+    private String location;
 }

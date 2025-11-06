@@ -1,6 +1,7 @@
 package com.snaptask.server.snaptask_server.service.user;
 
 import com.snaptask.server.snaptask_server.dto.notification.PosterNotificationDto;
+import com.snaptask.server.snaptask_server.dto.notification.SeekerNotificationDto;
 import com.snaptask.server.snaptask_server.dto.user.ProfileDto;
 import com.snaptask.server.snaptask_server.dto.user.RegisterFcmDto;
 import com.snaptask.server.snaptask_server.dto.user.SetLocationDto;
@@ -161,5 +162,45 @@ public class UserService {
 
         return ResponseEntity.ok(notificationDtos);
     }
+
+    public ResponseEntity<List<SeekerNotificationDto>> getAllSeekerNotifications() {
+        User user = helper.getCurrentLoggedInUser();
+        log.info("Fetching notifications for seeker with ID: {}", user.getId());
+
+        List<Notification> notifications = customNotificationRepository.findByReceiverIdAndStatus(
+                user.getId(),
+                NotificationStatus.NEW
+        );
+
+        if (notifications.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        List<SeekerNotificationDto> notificationDtos = notifications.stream()
+                .map(n -> SeekerNotificationDto.builder()
+                        .id(n.getId())
+                        .type(n.getType())
+                        .taskId(n.getTaskId())
+                        .posterName(n.getPosterName())
+                        .taskTitle(n.getTaskTitle())
+                        .time(n.getCreatedAt() != null ? n.getCreatedAt().toString() : null)
+                        .posterRating(n.getPosterRating())
+                        .postedOn(
+                                n.getCreatedAt() != null
+                                        ? n.getCreatedAt().toString()
+                                        : "N/A"
+                        )
+                        .message(n.getMessage())
+                        .budget(n.getBudget())
+                        .deadline(n.getDeadline())
+                        .updateInfo(n.getUpdateInfo())
+                        .status(n.getStatus())
+                        .build()
+                )
+                .toList();
+
+        return ResponseEntity.ok(notificationDtos);
+    }
+
 
 }

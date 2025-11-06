@@ -65,10 +65,10 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
 
   return (
     <>
-      <View className="px-6 py-5 bg-white border-t border-slate-100">
-        <View className="flex-row justify-between space-x-3">
+      <View className="px-5 py-4 bg-white border-t border-slate-200">
+        <View className="flex-row justify-between" style={{ gap: 12 }}>
           
-          {/* Edit Button - Primary */}
+          {/* Edit Button - Blue */}
           <TouchableOpacity 
             className="flex-1"
             onPress={handleEdit}
@@ -76,47 +76,50 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
             disabled={isLoading}
           >
             <LinearGradient
-              colors={['#6366F1', '#8B5CF6']}
+              colors={['#3B82F6', '#2563EB']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              className="py-4 rounded-2xl items-center justify-center flex-row"
+              className="py-3 rounded-xl items-center justify-center flex-row"
               style={{
-                shadowColor: '#6366F1',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 6
+                shadowColor: '#3B82F6',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3,
+                borderRadius: 12, // Ensure rounded corners
               }}
             >
-              <Ionicons name="pencil" size={18} color="#ffffff" />
-              <Text className="text-white font-semibold text-base ml-2">
+              <Ionicons name="pencil" size={16} color="#ffffff" />
+              <Text className="text-white font-semibold text-sm ml-2">
                 Edit
               </Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Delete Button - Danger */}
+          {/* Delete Button - Blue Outline */}
           <TouchableOpacity 
             className="flex-1"
             onPress={handleDelete}
             activeOpacity={0.8}
             disabled={isLoading}
           >
-            <View className="py-4 rounded-2xl items-center justify-center flex-row border-2 border-red-500 bg-white"
+            <View 
+              className="py-3 rounded-xl items-center justify-center flex-row border border-blue-500 bg-white"
               style={{
-                shadowColor: '#ef4444',
-                shadowOffset: { width: 0, height: 2 },
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3
+                shadowRadius: 2,
+                elevation: 2,
+                borderRadius: 12, // Ensure rounded corners
               }}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color="#ef4444" />
+                <ActivityIndicator size="small" color="#3B82F6" />
               ) : (
                 <>
-                  <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                  <Text className="text-red-600 font-semibold text-base ml-2">
+                  <Ionicons name="trash-outline" size={16} color="#3B82F6" />
+                  <Text className="text-blue-600 font-semibold text-sm ml-2">
                     Delete
                   </Text>
                 </>
@@ -124,7 +127,7 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
             </View>
           </TouchableOpacity>
 
-          {/* Complete Button - Success (conditionally shown) */}
+          {/* Complete Button - Blue (conditionally shown) */}
           {status === 'active' && (
             <TouchableOpacity 
               className="flex-1"
@@ -136,17 +139,18 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
                 colors={['#10B981', '#059669']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="py-4 rounded-2xl items-center justify-center flex-row"
+                className="py-3 rounded-xl items-center justify-center flex-row"
                 style={{
                   shadowColor: '#10B981',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                  elevation: 6
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3,
+                  borderRadius: 12, // Ensure rounded corners
                 }}
               >
-                <Ionicons name="checkmark-done" size={18} color="#ffffff" />
-                <Text className="text-white font-semibold text-base ml-2">
+                <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                <Text className="text-white font-semibold text-sm ml-2">
                   Complete
                 </Text>
               </LinearGradient>
@@ -156,7 +160,7 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
 
         {/* Status message when complete button is hidden */}
         {status !== 'active' && (
-          <View className="mt-3">
+          <View className="mt-2">
             <Text className="text-slate-500 text-xs text-center">
               Task is {status}
             </Text>

@@ -39,7 +39,7 @@ public class Task {
     private String description;
 
     @Field("category")
-    @Indexed  //  filtering tasks by category (e.g., design, coding)
+    @Indexed
     private String category;
 
     @Field("budget")
@@ -75,13 +75,15 @@ public class Task {
     @Field("assigned_seeker_id")
     private String assignedSeekerId;
 
+    @Field("is_assigned")
+    private boolean isAssigned = false;
+
     @Field("assigned_bid_id")
     private String assignedBidId;
 
     @Field("bid_ids")
     @Builder.Default
     private List<String> bidIds = List.of();
-
 
     @Field("bids_count")
     @Builder.Default

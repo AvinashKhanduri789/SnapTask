@@ -96,7 +96,7 @@ const StatusModal = ({
       },
       iconColor: '#3b82f6'
     };
-  };
+  }; // ← This closing brace was missing
 
   const config = getConfig();
 
@@ -226,7 +226,8 @@ const StatusModal = ({
           </Text>
 
           {/* Action Buttons */}
-          <View className={`w-full ${shouldShowCloseButton ? 'space-y-3' : ''}`}>
+          <View className="w-full">
+            {/* Primary Action Button */}
             <TouchableOpacity
               onPress={handlePrimaryAction}
               className={`w-full py-4 rounded-2xl shadow-lg`}
@@ -237,15 +238,18 @@ const StatusModal = ({
               </Text>
             </TouchableOpacity>
             
+            {/* Close/Cancel Button - Only show when needed */}
             {shouldShowCloseButton && (
-              <TouchableOpacity
-                onPress={handleClose}
-                className="w-full py-3 rounded-2xl border border-gray-300"
-              >
-                <Text className="text-gray-700 font-semibold text-center">
-                  Cancel
-                </Text>
-              </TouchableOpacity>
+              <View style={{ marginTop: 12 }}>
+                <TouchableOpacity
+                  onPress={handleClose}
+                  className="w-full py-3 rounded-2xl border border-gray-300"
+                >
+                  <Text className="text-gray-700 font-semibold text-center">
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </Animated.View>
@@ -253,6 +257,5 @@ const StatusModal = ({
     </Modal>
   );
 };
-
 
 export default StatusModal;

@@ -34,6 +34,13 @@
       "bundler": "metro"
     },
     "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Snaptask to access your location always",
+          
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
