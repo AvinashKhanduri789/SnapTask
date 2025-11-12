@@ -53,7 +53,7 @@ const Login = () => {
       );
 
       if (!response.ok) {
-        Alert.alert("Login failed", response.error?.data || "Invalid credentials");
+        Alert.alert("Login failed", response.error?.data || "Invalid credentials"); 
         return;
       }
 

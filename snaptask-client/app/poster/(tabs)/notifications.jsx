@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, Dimensions, ActivityIndicator, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApi } from "../../../util/useApi";
@@ -23,11 +23,12 @@ const NotificationsTab = () => {
     loadNotifications();
   }, []);
 
-  // Fix: Use useEffect to update notifications when data changes
+ 
   useEffect(() => {
     if (data) {
       setNotifications(data);
     }
+
   }, [data]);
 
   const onRefresh = async () => {
@@ -71,18 +72,22 @@ const NotificationsTab = () => {
   if (isLoading && !refreshing) {
     return (
       <View className="flex-1 bg-slate-50">
+        <StatusBar backgroundColor="#3B82F6" barStyle="light-content" />
         <LinearGradient
-          colors={['#6366F1', '#3B82F6', '#60A5FA']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="pt-16 pb-8 px-6 rounded-b-3xl"
+          colors={['#3B82F6', '#3B82F6']}
+          className="pt-20 pb-10 px-6"
+          style={{ 
+            borderBottomLeftRadius: 54,
+            borderBottomRightRadius: 54,
+            marginBottom: 15,
+          }}
         >
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
               <Text className="text-3xl font-bold text-white mb-2">
                 Notifications
               </Text>
-              <Text className="text-purple-100 text-base font-medium">
+              <Text className="text-blue-100 text-base font-medium">
                 Bids and task updates
               </Text>
             </View>
@@ -104,18 +109,22 @@ const NotificationsTab = () => {
   if (error) {
     return (
       <View className="flex-1 bg-slate-50">
+        <StatusBar backgroundColor="#3B82F6" barStyle="light-content" />
         <LinearGradient
-          colors={['#6366F1', '#3B82F6', '#60A5FA']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="pt-16 pb-8 px-6 rounded-b-3xl"
+          colors={['#3B82F6', '#3B82F6']}
+          className="pt-16 pb-8 px-6"
+          style={{ 
+            borderBottomLeftRadius: 54,
+            borderBottomRightRadius: 54,
+            marginBottom: 15,
+          }}
         >
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
               <Text className="text-3xl font-bold text-white mb-2">
                 Notifications
               </Text>
-              <Text className="text-purple-100 text-base font-medium">
+              <Text className="text-blue-100 text-base font-medium">
                 Bids and task updates
               </Text>
             </View>
@@ -144,22 +153,26 @@ const NotificationsTab = () => {
     );
   }
 
-  // Empty State
+
   if (!isLoading && (!notifications || notifications.length === 0)) {
     return (
       <View className="flex-1 bg-slate-50">
+        <StatusBar backgroundColor="#3B82F6" barStyle="light-content" />
         <LinearGradient
-          colors={['#6366F1', '#3B82F6', '#60A5FA']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="pt-16 pb-8 px-6 rounded-b-3xl"
+          colors={['#3B82F6', '#3B82F6']}
+          className="pt-16 pb-8 px-6"
+          style={{ 
+            borderBottomLeftRadius: 54,
+            borderBottomRightRadius: 54,
+            marginBottom: 15,
+          }}
         >
           <View className="flex-row justify-between items-center">
             <View className="flex-1">
               <Text className="text-3xl font-bold text-white mb-2">
                 Notifications
               </Text>
-              <Text className="text-purple-100 text-base font-medium">
+              <Text className="text-blue-100 text-base font-medium">
                 Bids and task updates
               </Text>
             </View>
@@ -205,21 +218,25 @@ const NotificationsTab = () => {
   // Main Content
   return (
     <View className="flex-1 bg-slate-50">
-      {/* Header with Gradient Background - Fixed */}
+      <StatusBar backgroundColor="#3B82F6" barStyle="light-content" />
+      
+      {/* Header with Curved Bottom */}
       <LinearGradient
-        colors={['#6366F1', '#3B82F6', '#60A5FA']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="pt-16 pb-8 px-6 rounded-b-3xl mb-5"
-        style={{ zIndex: 10 }}
+        colors={['#3B82F6', '#3B82F6']}
+        className="pt-16 pb-8 px-6"
+        style={{ 
+          borderBottomLeftRadius: 54,
+          borderBottomRightRadius: 54,
+          marginBottom: 15,
+        }}
       >
         <View className="flex-row justify-between items-center">
           <View className="flex-1">
             <Text className="text-3xl font-bold text-white mb-2">
               Notifications
             </Text>
-            <Text className="text-purple-100 text-base font-medium">
-              Bids and task updates
+            <Text className="text-blue-100 text-base font-medium">
+              {notifications.length} unread notifications
             </Text>
           </View>
           {/* Decorative Icon */}
@@ -229,7 +246,7 @@ const NotificationsTab = () => {
         </View>
       </LinearGradient>
 
-      {/* Notifications List - Scrolls behind header */}
+      {/* Notifications List */}
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -242,7 +259,6 @@ const NotificationsTab = () => {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 20 }}
-        style={{ marginTop: -20, zIndex: 1 }}
       >
         <View className="px-4 space-y-4">
           {notifications.map((notification, index) => {
@@ -516,4 +532,3 @@ const NotificationsTab = () => {
 };
 
 export default NotificationsTab;
-

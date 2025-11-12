@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, Alert, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,47 +7,60 @@ import EditTaskBottomSheet from './EditTaskBottomSheet';
 import { useState } from 'react';
 import { useApi } from "../../../util/useApi";
 import { api } from "../../../util/requester";
+import StatusModal from '../../common/StatusModal';
 
 const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
-  const { request, isLoading } = useApi();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    status: 'info',
+    title: '',
+    message: '',
+    primaryActionLabel: 'OK'
+  });
+  const { request, isLoading,error } = useApi();
   const router = useRouter();
+
+  const showModal = (status, title, message, primaryActionLabel = 'OK') => {
+    setModalConfig({
+      status,
+      title,
+      message,
+      primaryActionLabel
+    });
+    setModalVisible(true);
+  };
 
   const handleEdit = () => {
     setIsEditSheetVisible(true);
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      "Delete Task",
-      "Are you sure you want to delete this task? This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: confirmDelete
-        }
-      ]
+    showModal(
+      'warning',
+      'Delete Task',
+      'Are you sure you want to delete this task? This action cannot be undone.',
+      'Delete'
     );
   };
 
   const confirmDelete = async () => {
     try {
-      const response = await request(api.delete(`/poster/delete/${taskId}`));
+      console.log("task id when delteing task is -->", taskId);
+      const response = await request(
+         api.delete(`/poster/delete`, { data: { taskId } })
+      );
       
       if (response.ok) {
-        // Success - go back to previous screen
-        Alert.alert("Success", "Task deleted successfully");
-        router.back(); // This will pop the current screen from the stack
+        showModal('success', 'Success', 'Task deleted successfully');
+        setTimeout(() => {
+          router.back();
+        }, 1500);
       } else {
-        Alert.alert("Error", "Failed to delete task. Please try again.");
+        showModal('error', 'Task Cannot Be Deleted', error);
       }
     } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred.");
+      showModal('error', 'Error', error);
       console.error('Delete task error:', error);
     }
   };
@@ -61,6 +74,18 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
     if (onTaskUpdate) {
       onTaskUpdate();
     }
+  };
+
+  const handleModalPrimaryAction = () => {
+    if (modalConfig.status === 'warning' && modalConfig.primaryActionLabel === 'Delete') {
+      // This is the delete confirmation modal
+      confirmDelete();
+    }
+    setModalVisible(false);
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
   };
 
   return (
@@ -86,7 +111,7 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
                 shadowOpacity: 0.2,
                 shadowRadius: 4,
                 elevation: 3,
-                borderRadius: 12, // Ensure rounded corners
+                borderRadius: 12,
               }}
             >
               <Ionicons name="pencil" size={16} color="#ffffff" />
@@ -111,7 +136,7 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
                 shadowOpacity: 0.1,
                 shadowRadius: 2,
                 elevation: 2,
-                borderRadius: 12, // Ensure rounded corners
+                borderRadius: 12,
               }}
             >
               {isLoading ? (
@@ -146,7 +171,7 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
                   shadowOpacity: 0.2,
                   shadowRadius: 4,
                   elevation: 3,
-                  borderRadius: 12, // Ensure rounded corners
+                  borderRadius: 12,
                 }}
               >
                 <Ionicons name="checkmark-done" size={16} color="#ffffff" />
@@ -173,7 +198,19 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
         onClose={() => setIsEditSheetVisible(false)}
         taskData={taskData}
         onSave={handleSaveChanges}
-      />  
+      />
+
+      <StatusModal
+        visible={modalVisible}
+        onClose={handleModalClose}
+        status={modalConfig.status}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        showCloseButton={modalConfig.status === 'warning'} // Show close button only for warning (delete confirmation)
+        vibration={modalConfig.status === 'error' || modalConfig.status === 'warning'}
+        primaryActionLabel={modalConfig.primaryActionLabel}
+        onPrimaryAction={handleModalPrimaryAction}
+      />
     </>
   );
 };

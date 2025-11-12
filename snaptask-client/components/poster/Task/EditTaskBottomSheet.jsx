@@ -3,14 +3,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState, useEffect } from 'react';
 import { formatDate } from '../../../util/helper';
 import { useApi } from '../../../util/useApi';
-import {api} from '../../../util/requester';
+import { api } from '../../../util/requester';
 import { Alert } from 'react-native';
 import {
   Animated,
   Dimensions,
   Easing,
   KeyboardAvoidingView,
-  Modal,      
+  Modal,
   Platform,
   ScrollView,
   Text,
@@ -19,11 +19,15 @@ import {
   View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.85;
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const BOTTOM_SHEET_HEIGHT =
+  Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.92 : SCREEN_HEIGHT * 0.95;
 
 const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
+  const insets = useSafeAreaInsets(); // ✅ dynamically handles bottom inset
+
   const [formData, setFormData] = useState({
     title: taskData?.title || '',
     description: taskData?.description || '',
@@ -31,7 +35,7 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
     duration: taskData?.duration || '',
     category: taskData?.category || 'Design',
     deadline: taskData?.deadline ? new Date(taskData.deadline) : new Date(),
-    mode: taskData?.mode || 'Remote'
+    mode: taskData?.mode || 'Remote',
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -44,7 +48,6 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
   const categories = ['Design', 'Development', 'Writing', 'Marketing', 'Other'];
   const modes = ['Remote', 'On-site', 'Hybrid'];
 
-  // Animate open/close
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -77,22 +80,16 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
     }
   }, [visible]);
 
-  // Convert date to ISO string for backend
-  const formatDateToISO = (date) => {
-    return date.toISOString();
-  };
+  const formatDateToISO = (date) => date.toISOString();
 
-  // Format date for display
-  const formatDateForDisplay = (date) => {
-    return date.toLocaleDateString('en-US', {
+  const formatDateForDisplay = (date) =>
+    date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
-  };
-
 
   const handleSave = async () => {
     const payload = {
@@ -101,32 +98,32 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
       description: formData.description.trim(),
       category: formData.category,
       budget: parseFloat(formData.budget) || 0,
-      deadline: formatDateToISO(formData.deadline), // Convert to ISO string
+      deadline: formatDateToISO(formData.deadline),
     };
 
-    console.log("📦 Sending update payload:", payload);
+    console.log('📦 Sending update payload:', payload);
 
-    const result = await request(api.put("/poster/update", payload));
+    const result = await request(api.put('/poster/update', payload));
 
     if (result.ok) {
-      Alert.alert("✅ Success", "Task updated successfully!");
+      Alert.alert('✅ Success', 'Task updated successfully!');
       onSave && onSave();
       onClose();
     } else {
-      Alert.alert("❌ Error", result.error?.detail || "Failed to update task. Try again.");
+      Alert.alert('❌ Error', result.error?.detail || 'Failed to update task. Try again.');
     }
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setFormData(prev => ({ 
-        ...prev, 
-        deadline: selectedDate 
+      setFormData((prev) => ({
+        ...prev,
+        deadline: selectedDate,
       }));
     }
   };
@@ -142,16 +139,25 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
         selectedTime.getHours(),
         selectedTime.getMinutes()
       );
-      setFormData(prev => ({ 
-        ...prev, 
-        deadline: newDate 
+      setFormData((prev) => ({
+        ...prev,
+        deadline: newDate,
       }));
     }
   };
 
   const renderInputField = (label, field, placeholder, multiline = false, keyboardType = 'default') => (
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>{label}</Text>
+      <Text
+        style={{
+          fontSize: SCREEN_WIDTH < 375 ? 13 : 14,
+          fontWeight: '700',
+          color: '#111',
+          marginBottom: 8,
+        }}
+      >
+        {label}
+      </Text>
       <View
         style={{
           backgroundColor: '#f5f5f5',
@@ -161,10 +167,11 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
           paddingHorizontal: 16,
           paddingVertical: multiline ? 12 : 0,
           minHeight: multiline ? 100 : 50,
-        }}>
+        }}
+      >
         <TextInput
           style={{
-            fontSize: 16,
+            fontSize: SCREEN_WIDTH < 375 ? 15 : 16,
             color: '#111',
             fontWeight: '500',
             textAlignVertical: multiline ? 'top' : 'center',
@@ -183,8 +190,17 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
 
   const renderDateField = () => (
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>Deadline</Text>
-      
+      <Text
+        style={{
+          fontSize: SCREEN_WIDTH < 375 ? 13 : 14,
+          fontWeight: '700',
+          color: '#111',
+          marginBottom: 8,
+        }}
+      >
+        Deadline
+      </Text>
+
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TouchableOpacity
           onPress={() => setShowDatePicker(true)}
@@ -198,10 +214,16 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
             paddingVertical: 15,
             alignItems: 'center',
             flexDirection: 'row',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
           }}
         >
-          <Text style={{ fontSize: 16, color: '#111', fontWeight: '500' }}>
+          <Text
+            style={{
+              fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
+              color: '#111',
+              fontWeight: '500',
+            }}
+          >
             {formatDateForDisplay(formData.deadline)}
           </Text>
           <Ionicons name="calendar-outline" size={20} color="#6366F1" />
@@ -218,14 +240,13 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
             paddingHorizontal: 12,
             paddingVertical: 15,
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
           }}
         >
           <Ionicons name="time-outline" size={20} color="#6366F1" />
         </TouchableOpacity>
       </View>
 
-      {/* Date Picker */}
       {showDatePicker && (
         <DateTimePicker
           value={formData.deadline}
@@ -236,7 +257,6 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
         />
       )}
 
-      {/* Time Picker */}
       {showTimePicker && (
         <DateTimePicker
           value={formData.deadline}
@@ -245,16 +265,21 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
           onChange={handleTimeChange}
         />
       )}
-
-      <Text style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-        ISO Format: {formatDateToISO(formData.deadline)}
-      </Text>
     </View>
   );
 
   const renderSelectField = (label, field, options, selectedValue) => (
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 8 }}>{label}</Text>
+      <Text
+        style={{
+          fontSize: SCREEN_WIDTH < 375 ? 13 : 14,
+          fontWeight: '700',
+          color: '#111',
+          marginBottom: 8,
+        }}
+      >
+        {label}
+      </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {options.map((option) => (
@@ -268,13 +293,15 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
                 backgroundColor: selectedValue === option ? '#6366F1' : '#f5f5f5',
                 borderWidth: 1,
                 borderColor: selectedValue === option ? '#6366F1' : '#e0e0e0',
-              }}>
+              }}
+            >
               <Text
                 style={{
-                  fontSize: 14,
+                  fontSize: SCREEN_WIDTH < 375 ? 13 : 14,
                   fontWeight: '600',
                   color: selectedValue === option ? '#fff' : '#111',
-                }}>
+                }}
+              >
                 {option}
               </Text>
             </TouchableOpacity>
@@ -292,29 +319,100 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
       <Animated.View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', opacity: fadeAnim }}>
         <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={handleBackgroundPress} />
-        <Animated.View style={{ height: BOTTOM_SHEET_HEIGHT, transform: [{ translateY }] }}>
-          <View style={{ flex: 1, borderTopLeftRadius: 32, borderTopRightRadius: 32, backgroundColor: '#fff', overflow: 'hidden' }}>
-            
+        <Animated.View
+          style={{
+            height: BOTTOM_SHEET_HEIGHT,
+            transform: [{ translateY }],
+            width: '100%',
+          }}
+        >
+          <View
+            style={{
+              flex: 1,
+              borderTopLeftRadius: 32,
+              borderTopRightRadius: 32,
+              backgroundColor: '#fff',
+              overflow: 'hidden',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 20,
+              elevation: 10,
+            }}
+          >
             {/* Header */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
-              <Text style={{ fontSize: 22, fontWeight: '800', color: '#1a1a1a' }}>Edit Task</Text>
-              <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close" size={26} color="#6366F1" />
-              </TouchableOpacity>
-            </View>
+            <LinearGradient
+              colors={['#3B82F6', '#3B82F6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                paddingHorizontal: 24,
+                paddingVertical: Platform.OS === 'ios' ? 28 : 24,
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: SCREEN_WIDTH < 375 ? 20 : 22,
+                      fontWeight: '800',
+                      color: '#ffffff',
+                      marginBottom: 4,
+                    }}
+                  >
+                    Edit Task
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: SCREEN_WIDTH < 375 ? 12 : 14,
+                      color: 'rgba(255,255,255,0.9)',
+                    }}
+                  >
+                    Update your task details
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: 16,
+                  }}
+                >
+                  <Ionicons name="close" size={24} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
 
             {/* Content */}
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={{ flex: 1 }}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+            >
+              <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                  paddingHorizontal: Math.max(16, SCREEN_WIDTH * 0.05),
+                  paddingTop: 20,
+                  paddingBottom: 120,
+                }}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
                 {renderInputField('Task Title', 'title', 'Enter task title...')}
                 {renderInputField('Description', 'description', 'Describe your task...', true)}
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                  <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: SCREEN_WIDTH < 375 ? 'column' : 'row', gap: 12 }}>
+                  <View style={{ flex: 1, marginBottom: SCREEN_WIDTH < 375 ? 20 : 0 }}>
                     {renderInputField('Budget (₹)', 'budget', 'Enter amount', false, 'number-pad')}
                   </View>
-                  <View style={{ flex: 1 }}>
-                    {renderInputField('Duration', 'duration', 'e.g., 3 days')}
-                  </View>
+                  <View style={{ flex: 1 }}>{renderInputField('Duration', 'duration', 'e.g., 3 days')}</View>
                 </View>
                 {renderSelectField('Category', 'category', categories, formData.category)}
                 {renderSelectField('Work Mode', 'mode', modes, formData.mode)}
@@ -322,21 +420,87 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
               </ScrollView>
             </KeyboardAvoidingView>
 
-            {/* Buttons */}
-            <View style={{ flexDirection: 'row', paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: 1, borderTopColor: '#eee', backgroundColor: '#fff', gap: 12 }}>
-              <TouchableOpacity onPress={onClose} style={{ flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#ddd', alignItems: 'center' }}>
-                <Text style={{ fontSize: 16, fontWeight: '700', color: '#555' }}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleSave} disabled={isLoading} style={{ flex: 2, opacity: isLoading ? 0.7 : 1 }}>
-                <LinearGradient colors={['#6366F1', '#4F46E5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={{ paddingVertical: 14, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
-                  <Ionicons name="save-outline" size={20} color="#fff" />
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>
-                    {isLoading ? "Saving..." : "Save Changes"}
+            {/* Fixed Bottom Buttons */}
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                backgroundColor: '#fff',
+                borderTopWidth: 1,
+                borderTopColor: '#f1f5f9',
+                paddingHorizontal: Math.max(16, SCREEN_WIDTH * 0.05),
+                paddingVertical: 16,
+                paddingBottom:
+                  Platform.OS === 'ios'
+                    ? Math.max(20, insets.bottom + 20)
+                    : Math.max(16, insets.bottom + 16), // ✅ Safe inset padding fix
+              }}
+            >
+              <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 16,
+                    borderRadius: 16,
+                    borderWidth: 2,
+                    borderColor: '#cbd5e1',
+                    alignItems: 'center',
+                    backgroundColor: '#fff',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: SCREEN_WIDTH < 375 ? 15 : 16,
+                      fontWeight: '700',
+                      color: '#64748b',
+                    }}
+                  >
+                    Cancel
                   </Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleSave}
+                  disabled={isLoading}
+                  style={{
+                    flex: 2,
+                    opacity: isLoading ? 0.7 : 1,
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#6366F1', '#4F46E5']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      paddingVertical: 16,
+                      borderRadius: 16,
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      gap: 8,
+                      shadowColor: '#6366F1',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                  >
+                    <Ionicons name="save-outline" size={20} color="#fff" />
+                    <Text
+                      style={{
+                        fontSize: SCREEN_WIDTH < 375 ? 15 : 16,
+                        fontWeight: '700',
+                        color: '#fff',
+                      }}
+                    >
+                      {isLoading ? 'Saving...' : 'Save Changes'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Animated.View>

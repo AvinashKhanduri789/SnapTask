@@ -2,6 +2,7 @@ package com.snaptask.server.snaptask_server.modals;
 
 import com.snaptask.server.snaptask_server.enums.TaskStatus;
 import com.snaptask.server.snaptask_server.enums.WorkMode;
+import com.snaptask.server.snaptask_server.modals.embedded.CompletionDetail;
 import com.snaptask.server.snaptask_server.modals.embedded.TimelineStage;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -88,6 +89,9 @@ public class Task {
     @Field("bids_count")
     @Builder.Default
     private int bidsCount = 0;
+
+    @Field("completion_detail")
+    private CompletionDetail completionDetail;
 
     @Field("timeline")
     private List<TimelineStage> timeline;

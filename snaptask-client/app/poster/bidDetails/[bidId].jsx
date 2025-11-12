@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApi } from '../../../util/useApi';
 import { api } from '../../../util/requester';
 import StatusModal from '../../../components/common/StatusModal';
+import { formatDate } from '../../../util/helper';
 
 const BidDetailScreen = () => {
   const router = useRouter();
@@ -23,7 +24,7 @@ const BidDetailScreen = () => {
     primaryActionLabel: 'OK'
   });
 
-  // State for bid actions
+ 
   const [isAccepting, setIsAccepting] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
 
@@ -38,7 +39,7 @@ const BidDetailScreen = () => {
 
   const fetchBidDetails = async () => {
     try {
-      const response = await request(api.get(`/poster/bidDetails/690af764cf88ebc6c8391d9c`));
+      const response = await request(api.get(`/poster/bidDetails/${bidId}`));
       
       if (response.ok) {
         setBidData(response.data);
@@ -392,7 +393,7 @@ const BidDetailScreen = () => {
               </View>
               <View className="flex-1">
                 <Text className="text-slate-500 text-sm font-semibold mb-1">Member Since</Text>
-                <Text className="text-slate-800 text-lg font-bold">{bidData.memberSince || 'N/A'}</Text>
+                <Text className="text-slate-800 text-lg font-bold">{formatDate(bidData.memberSince) || 'N/A'}</Text>
               </View>
             </View>
 
@@ -585,7 +586,7 @@ const BidDetailScreen = () => {
         </View>
       )}
 
-      {/* Status Modal */}
+     
       <StatusModal
         visible={modalVisible}
         onClose={handleModalClose}

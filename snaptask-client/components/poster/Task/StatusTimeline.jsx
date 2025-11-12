@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
+import { Text, View, TouchableOpacity, Dimensions } from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const StatusTimeline = ({ status, postedOn, deadline }) => {
   // Generate timeline based on status
@@ -132,6 +134,13 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
     }
   };
 
+  // Responsive font sizes
+  const getResponsiveFontSize = (baseSize) => {
+    if (SCREEN_WIDTH < 375) return baseSize - 1; // iPhone SE, small devices
+    if (SCREEN_WIDTH < 414) return baseSize;     // Standard iPhones
+    return baseSize + 1;                         // Larger devices
+  };
+
   return (
     <View style={{
       backgroundColor: '#ffffff',
@@ -143,7 +152,8 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
       shadowOpacity: 0.15,
       shadowRadius: 20,
       elevation: 8,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      // REMOVED the marginHorizontal to make it full width like other components
     }}>
       {/* Header Gradient Bar */}
       <LinearGradient
@@ -155,17 +165,25 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
           width: '100%'
         }}
       />
-      <View style={{ padding: 24 }}>
-        {/* Header with Progress */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ 
+        paddingHorizontal: Math.max(16, SCREEN_WIDTH * 0.05), // Responsive padding
+        paddingVertical: 20 
+      }}>
+        {/* Header with Progress - Fixed layout */}
+        <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'flex-start', 
+          justifyContent: 'space-between', 
+          marginBottom: 20 
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
             <LinearGradient
               colors={['#06B6D4', '#0EA5E9']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
-                width: 44,
-                height: 44,
+                width: SCREEN_WIDTH < 375 ? 40 : 44,
+                height: SCREEN_WIDTH < 375 ? 40 : 44,
                 borderRadius: 14,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -177,11 +195,11 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                 elevation: 8
               }}
             >
-              <Ionicons name="time-outline" size={22} color="#ffffff" />
+              <Ionicons name="time-outline" size={SCREEN_WIDTH < 375 ? 20 : 22} color="#ffffff" />
             </LinearGradient>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={{
-                fontSize: 20,
+                fontSize: getResponsiveFontSize(18),
                 fontWeight: '800',
                 color: '#1f2937',
                 marginBottom: 2
@@ -189,7 +207,7 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                 Task Progress
               </Text>
               <Text style={{
-                fontSize: 14,
+                fontSize: getResponsiveFontSize(13),
                 color: '#6b7280',
                 fontWeight: '600'
               }}>
@@ -197,18 +215,22 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
               </Text>
             </View>
           </View>
+          {/* Status Badge with fixed width */}
           <View style={{
             backgroundColor: '#f0f9ff',
-            paddingHorizontal: 12,
-            paddingVertical: 6,
+            paddingHorizontal: SCREEN_WIDTH < 375 ? 8 : 12,
+            paddingVertical: SCREEN_WIDTH < 375 ? 4 : 6,
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: '#e0f2fe'
+            borderColor: '#e0f2fe',
+            minWidth: SCREEN_WIDTH < 375 ? 70 : 80, // Fixed minimum width
+            marginLeft: 8
           }}>
             <Text style={{
-              fontSize: 14,
+              fontSize: SCREEN_WIDTH < 375 ? 12 : 14,
               fontWeight: '700',
-              color: getStatusColor()
+              color: getStatusColor(),
+              textAlign: 'center'
             }}>
               {getStatusText()}
             </Text>
@@ -223,10 +245,18 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
             alignItems: 'center',
             marginBottom: 8 
           }}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: '#6b7280' }}>
+            <Text style={{ 
+              fontSize: getResponsiveFontSize(12), 
+              fontWeight: '600', 
+              color: '#6b7280' 
+            }}>
               Overall Progress
             </Text>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#3B82F6' }}>
+            <Text style={{ 
+              fontSize: getResponsiveFontSize(12), 
+              fontWeight: '700', 
+              color: '#3B82F6' 
+            }}>
               {Math.round(progress)}%
             </Text>
           </View>
@@ -250,7 +280,7 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
         </View>
 
         {/* Timeline Stages */}
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: 12 }}>
           {timeline.map((stage, index) => {
             const isCurrent = !stage.completed && index === timeline.findIndex(s => !s.completed);
             const isUpcoming = !stage.completed && !isCurrent;
@@ -261,7 +291,7 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                 style={{ 
                   flexDirection: 'row', 
                   alignItems: 'flex-start',
-                  padding: 16,
+                  padding: SCREEN_WIDTH < 375 ? 12 : 16,
                   borderRadius: 16,
                   backgroundColor: isCurrent ? '#f0f9ff' : 
                                  stage.completed ? '#f0fdf4' : '#f8fafc',
@@ -271,15 +301,19 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                 }}
               >
                 {/* Timeline Indicator */}
-                <View style={{ width: 32, alignItems: 'center', marginRight: 12 }}>
+                <View style={{ 
+                  width: SCREEN_WIDTH < 375 ? 28 : 32, 
+                  alignItems: 'center', 
+                  marginRight: SCREEN_WIDTH < 375 ? 8 : 12 
+                }}>
                   <LinearGradient
                     colors={getStageGradient(stage.completed, isCurrent)}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 14,
+                      width: SCREEN_WIDTH < 375 ? 24 : 28,
+                      height: SCREEN_WIDTH < 375 ? 24 : 28,
+                      borderRadius: SCREEN_WIDTH < 375 ? 12 : 14,
                       alignItems: 'center',
                       justifyContent: 'center',
                       shadowColor: stage.completed ? '#10B981' : isCurrent ? '#3B82F6' : '#6B7280',
@@ -291,28 +325,33 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                   >
                     <Ionicons 
                       name={getStageIcon(stage.stage, stage.completed, isCurrent)} 
-                      size={16} 
+                      size={SCREEN_WIDTH < 375 ? 14 : 16} 
                       color="#ffffff" 
                     />
                   </LinearGradient>
                   {/* Connector Line */}
                   {index < timeline.length - 1 && (
                     <View style={{
-                      width: 3,
-                      height: 20,
+                      width: 2,
+                      height: 16,
                       backgroundColor: stage.completed ? '#10B981' : 
                                      isCurrent ? '#3B82F6' : '#e5e7eb',
-                      marginTop: 8,
-                      borderRadius: 2
+                      marginTop: 6,
+                      borderRadius: 1
                     }} />
                   )}
                 </View>
 
                 {/* Stage Content */}
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                  <View style={{ 
+                    flexDirection: SCREEN_WIDTH < 375 ? 'column' : 'row', 
+                    alignItems: SCREEN_WIDTH < 375 ? 'flex-start' : 'center', 
+                    marginBottom: 6,
+                    gap: SCREEN_WIDTH < 375 ? 4 : 0
+                  }}>
                     <Text style={{
-                      fontSize: 16,
+                      fontSize: getResponsiveFontSize(15),
                       fontWeight: '700',
                       color: stage.completed ? '#1f2937' : 
                              isCurrent ? '#1f2937' : '#9ca3af',
@@ -322,14 +361,15 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                     </Text>
                     {/* Status Badge */}
                     <View style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
+                      paddingHorizontal: SCREEN_WIDTH < 375 ? 6 : 8,
+                      paddingVertical: SCREEN_WIDTH < 375 ? 3 : 4,
                       borderRadius: 8,
                       backgroundColor: stage.completed ? '#D1FAE5' : 
-                                     isCurrent ? '#DBEAFE' : '#F3F4F6'
+                                     isCurrent ? '#DBEAFE' : '#F3F4F6',
+                      alignSelf: SCREEN_WIDTH < 375 ? 'flex-start' : 'center'
                     }}>
                       <Text style={{
-                        fontSize: 11,
+                        fontSize: SCREEN_WIDTH < 375 ? 10 : 11,
                         fontWeight: '700',
                         color: stage.completed ? '#059669' : 
                                isCurrent ? '#1D4ED8' : '#6B7280',
@@ -341,7 +381,7 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                     </View>
                   </View>
                   <Text style={{
-                    fontSize: 14,
+                    fontSize: getResponsiveFontSize(13),
                     color: stage.completed ? '#6b7280' : 
                            isCurrent ? '#6b7280' : '#9ca3af',
                     lineHeight: 20,
@@ -353,11 +393,11 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Ionicons 
                         name="calendar-outline" 
-                        size={12} 
+                        size={SCREEN_WIDTH < 375 ? 10 : 12} 
                         color={stage.completed ? '#10B981' : '#9ca3af'} 
                       />
                       <Text style={{
-                        fontSize: 12,
+                        fontSize: getResponsiveFontSize(11),
                         fontWeight: '600',
                         color: stage.completed ? '#10B981' : '#9ca3af',
                         marginLeft: 4
@@ -387,9 +427,9 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
             { color: '#6B7280', label: 'Upcoming', icon: 'ellipse-outline' }
           ].map((item, index) => (
             <View key={index} style={{ alignItems: 'center', flexDirection: 'row' }}>
-              <Ionicons name={item.icon} size={14} color={item.color} />
+              <Ionicons name={item.icon} size={SCREEN_WIDTH < 375 ? 12 : 14} color={item.color} />
               <Text style={{ 
-                fontSize: 12, 
+                fontSize: getResponsiveFontSize(11), 
                 fontWeight: '600', 
                 color: '#6b7280', 
                 marginLeft: 4 

@@ -1,8 +1,9 @@
 // components/profile/ProfileScreen.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { View, ScrollView, Text, ActivityIndicator, RefreshControl, TouchableOpacity, Alert, StatusBar, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ProfileHeader from '../../../components/poster/profile/ProfileHeader';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import ProfileInfo from '../../../components/poster/profile/ProfileInfo';
 import AccountSettings from '../../../components/poster/profile/AccountSettings';
 import ActionButtons from '../../../components/poster/profile/ActionButtons';
@@ -10,8 +11,20 @@ import { useAuth } from '../../_layout';
 import { useApi } from "../../../util/useApi";
 import { api } from "../../../util/requester";
 
+const { width } = Dimensions.get('window');
+
+const categories = [
+    { name: 'Design & Creative', icon: 'color-palette' },
+    { name: 'Development & IT', icon: 'code' },
+    { name: 'Writing & Translation', icon: 'create' },
+    { name: 'Marketing', icon: 'megaphone' },
+    { name: 'Administrative', icon: 'document-text' },
+    { name: 'Customer Service', icon: 'headset' },
+    { name: 'Other', icon: 'ellipsis-horizontal' }
+];
+
 const ProfileScreen = () => {
-  const { logout,userData } = useAuth();
+  const { logout, userData } = useAuth();
   const [profileData, setProfileData] = useState(null);
   const { request, data, isLoading, error } = useApi();
   const { request: updateRequest } = useApi(); 
@@ -47,33 +60,26 @@ const ProfileScreen = () => {
 
     setIsSaving(true);
     try {
-      // Prepare the data for the API call
+      
       const updateData = {
         name: profileData.name,
         phone: profileData.phone,
         workplace: profileData.workplace,
         bio: profileData.bio,
-        skills: profileData.skills || [],
-        
+        skills: profileData.skills || [], 
       };
-
-     
+      
+      console.log("while updating profile updateData is --->", updateData);
       const response = await api.put(`/${profileEndpointPrefix}/profile`, updateData);
 
       if (response.status >= 200 && response.status < 300) {
-        
         setIsEditing(false);
         console.log('Profile saved:', profileData);
-
-        
         await loadProfileData();
       } else {
-        
         Alert.alert('Error', 'Failed to update profile. Please try again.');
-        // console.error('Profile update failed:', response);
       }
     } catch (err) {
-      
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.log(err);
     } finally {
@@ -81,10 +87,7 @@ const ProfileScreen = () => {
     }
   };
 
-
-
   const handleCancel = () => {
-    // Reload original data to discard changes
     loadProfileData();
     setIsEditing(false);
   };
@@ -96,24 +99,112 @@ const ProfileScreen = () => {
     });
   }, []);
 
-  // Loading State - Show only during initial load when no data exists
+  // Loading State
   if (isLoading && !profileData) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <ProfileHeader />
+      <View className="flex-1 bg-slate-50">
+        <StatusBar backgroundColor="#6366F1" barStyle="light-content" translucent />
+        <View className="relative">
+          {/* Original Gradient Background with curved bottom */}
+          <LinearGradient
+            colors={['#6366F1', '#3B82F6', '#60A5FA']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              height: 200,
+              paddingTop: 60,
+            }}
+          >
+            <SafeAreaView>
+              <View className="px-6">
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-1">
+                    <Text className="text-3xl font-bold text-white mb-2">
+                      Profile
+                    </Text>
+                    <Text className="text-purple-100 text-base font-medium">
+                      Manage your personal information
+                    </Text>
+                  </View>
+                  <View className="bg-white/20 rounded-2xl p-3">
+                    <Text className="text-white text-lg">👤</Text>
+                  </View>
+                </View>
+              </View>
+            </SafeAreaView>
+          </LinearGradient>
+          
+          {/* Original Curved Bottom Overlay */}
+          <View 
+            style={{
+              position: 'absolute',
+              bottom: -40,
+              left: 0,
+              right: 0,
+              height: 80,
+              backgroundColor: 'white',
+              borderTopLeftRadius: 50,
+              borderTopRightRadius: 50,
+            }}
+          />
+        </View>
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#6366F1" />
           <Text className="text-slate-600 mt-4 text-lg">Loading profile...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  // Error State - Show only if no profile data exists
+  // Error State
   if (error && !profileData) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <ProfileHeader />
+      <View className="flex-1 bg-slate-50">
+        <StatusBar backgroundColor="#6366F1" barStyle="light-content" translucent />
+        <View className="relative">
+          {/* Original Gradient Background with curved bottom */}
+          <LinearGradient
+            colors={['#6366F1', '#3B82F6', '#60A5FA']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              height: 200,
+              paddingTop: 60,
+            }}
+          >
+            <SafeAreaView>
+              <View className="px-6">
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-1">
+                    <Text className="text-3xl font-bold text-white mb-2">
+                      Profile
+                    </Text>
+                    <Text className="text-purple-100 text-base font-medium">
+                      Manage your personal information
+                    </Text>
+                  </View>
+                  <View className="bg-white/20 rounded-2xl p-3">
+                    <Text className="text-white text-lg">👤</Text>
+                  </View>
+                </View>
+              </View>
+            </SafeAreaView>
+          </LinearGradient>
+          
+      
+          <View 
+            style={{
+              position: 'absolute',
+              bottom: -40,
+              left: 0,
+              right: 0,
+              height: 80,
+              backgroundColor: 'white',
+              borderTopLeftRadius: 50,
+              borderTopRightRadius: 50,
+            }}
+          />
+        </View>
         <View className="flex-1 justify-center items-center px-6">
           <View className="bg-red-50 rounded-2xl p-6 items-center border border-red-200">
             <Text className="text-red-500 text-xl font-bold mb-2">
@@ -130,26 +221,116 @@ const ProfileScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  // Don't render child components until profileData is available
+
   if (!profileData) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <ProfileHeader />
+      <View className="flex-1 bg-slate-50">
+        <StatusBar backgroundColor="#6366F1" barStyle="light-content" translucent />
+        <View className="relative">
+         
+          <LinearGradient
+            colors={['#6366F1', '#3B82F6', '#60A5FA']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              height: 200,
+              paddingTop: 60,
+            }}
+          >
+            <SafeAreaView>
+              <View className="px-6">
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-1">
+                    <Text className="text-3xl font-bold text-white mb-2">
+                      Profile
+                    </Text>
+                    <Text className="text-purple-100 text-base font-medium">
+                      Manage your personal information
+                    </Text>
+                  </View>
+                  <View className="bg-white/20 rounded-2xl p-3">
+                    <Text className="text-white text-lg">👤</Text>
+                  </View>
+                </View>
+              </View>
+            </SafeAreaView>
+          </LinearGradient>
+          
+     
+          <View 
+            style={{
+              position: 'absolute',
+              bottom: -40,
+              left: 0,
+              right: 0,
+              height: 80,
+              backgroundColor: 'white',
+              borderTopLeftRadius: 50,
+              borderTopRightRadius: 50,
+            }}
+          />
+        </View>
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#6366F1" />
           <Text className="text-slate-600 mt-4 text-lg">Loading profile data...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      <ProfileHeader />
+    <View className="flex-1 bg-slate-50">
+      <StatusBar backgroundColor="#6366F1" barStyle="light-content" translucent />
+      
+      {/* Original Header Design with curved bottom */}
+      <View className="relative">
+        <LinearGradient
+          colors={['#6366F1', '#3B82F6', '#60A5FA']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            height: 200,
+            paddingTop: 60,
+          }}
+        >
+          <SafeAreaView>
+            <View className="px-6">
+              <View className="flex-row justify-between items-center">
+                <View className="flex-1">
+                  <Text className="text-3xl font-bold text-white mb-2">
+                    Profile
+                  </Text>
+                  <Text className="text-purple-100 text-base font-medium">
+                    Manage your personal information
+                  </Text>
+                </View>
+                <View className="bg-white/20 rounded-2xl p-3">
+                  <Text className="text-white text-lg">👤</Text>
+                </View>
+              </View>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+        
+        {/* Original Curved Bottom Overlay */}
+        <View 
+          style={{
+            position: 'absolute',
+            bottom: -40,
+            left: 0,
+            right: 0,
+            height: 80,
+            backgroundColor: 'white',
+            borderTopLeftRadius: 50,
+            borderTopRightRadius: 50,
+          }}
+        />
+      </View>
+
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -162,11 +343,12 @@ const ProfileScreen = () => {
           />
         }
       >
-        <View className="p-4 space-y-6">
+        <View className="p-4 space-y-6" style={{ marginTop: -20 }}>
           <ProfileInfo
             profileData={profileData}
             isEditing={isEditing}
             updateProfileData={updateProfileData}
+            categories={categories} // Pass categories to ProfileInfo
           />
           <AccountSettings profileData={profileData} />
           <ActionButtons
@@ -189,8 +371,8 @@ const ProfileScreen = () => {
           </View>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
-export default ProfileScreen; 
+export default ProfileScreen;

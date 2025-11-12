@@ -13,25 +13,20 @@ const useLocation = () => {
 
   const updateLocationOnServer = async (lat, lng, userAddress) => {
     try {
-      const locationData = {
-        latitude: lat,
-        longitude: lng,
-        address: userAddress
-      };
-
+      const locationData = { latitude: lat, longitude: lng, address: userAddress };
       console.log("Sending location to server:", locationData);
-      
+
       const response = await request(api.put("/common/location", locationData));
-      
+
       if (response.ok) {
-        console.log("Location updated successfully on server");
+        console.log("✅ Location updated successfully on server");
         return true;
       } else {
-        console.error("Failed to update location on server:", response.error);
+        console.warn("⚠️ Failed to update location on server:", response.error);
         return false;
       }
     } catch (err) {
-      console.error("Error updating location on server:", err);
+      console.warn("⚠️ Error updating location on server");
       return false;
     }
   };
@@ -41,20 +36,20 @@ const useLocation = () => {
       const response = await Location.reverseGeocodeAsync({ latitude, longitude });
       if (response && response.length > 0) {
         const location = response[0];
-        // Create a readable address string
         const addressString = [
           location.name,
           location.street,
           location.city,
           location.region,
           location.country
-        ].filter(Boolean).join(", ");
-        
+        ]
+          .filter(Boolean)
+          .join(", ");
         return addressString || "Address not available";
       }
       return "Address not available";
-    } catch (error) {
-      console.error("Error getting address:", error);
+    } catch {
+      console.warn("⚠️ Unable to fetch address");
       return "Address not available";
     }
   };
@@ -75,40 +70,33 @@ const useLocation = () => {
         const { latitude, longitude } = coords;
         setLatitude(latitude);
         setLongitude(longitude);
-        console.log("Lat and Long: ", latitude, longitude);
+        console.log("📍 Lat and Long:", latitude, longitude);
 
-        // Get address from coordinates
         const userAddress = await getAddressFromCoords(latitude, longitude);
         setAddress(userAddress);
-        console.log("USER LOCATION IS: ", userAddress);
+        console.log("📍 User Address:", userAddress);
 
-        // Update location on server if requested
         if (shouldUpdateServer) {
           const updateSuccess = await updateLocationOnServer(latitude, longitude, userAddress);
           if (!updateSuccess) {
-            console.warn("Location was fetched but failed to update on server");
+            console.warn("⚠️ Location was fetched but failed to update on server");
           }
         }
 
-        return {
-          latitude,
-          longitude,
-          address: userAddress
-        };
+        return { latitude, longitude, address: userAddress };
       }
       return null;
     } catch (error) {
-      console.error("Error getting location:", error);
       setErrorMsg(error.message);
+      console.warn("⚠️ Unable to fetch location");
       return null;
     } finally {
       setIsLocationLoading(false);
     }
   };
 
-  
   useEffect(() => {
-    getUserLocation(true); 
+    getUserLocation(true);
   }, []);
 
   return {
@@ -119,7 +107,7 @@ const useLocation = () => {
     isLoading: isLocationLoading || isLoading,
     apiError: error,
     getUserLocation,
-    updateLocationOnServer 
+    updateLocationOnServer
   };
 };
 

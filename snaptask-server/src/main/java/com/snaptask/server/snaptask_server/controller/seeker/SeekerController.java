@@ -1,6 +1,7 @@
 package com.snaptask.server.snaptask_server.controller.seeker;
 
 import com.snaptask.server.snaptask_server.dto.task.CreateBidDto;
+import com.snaptask.server.snaptask_server.dto.task.TaskCompletionRequest;
 import com.snaptask.server.snaptask_server.modals.Task;
 import com.snaptask.server.snaptask_server.service.task.TaskService;
 import jakarta.validation.Valid;
@@ -45,6 +46,14 @@ public class SeekerController {
     @PostMapping("/makeBid")
     public ResponseEntity<?> makeBid(@Valid @RequestBody CreateBidDto dto) {
         return taskService.makeBid(dto);
+    }
+
+
+    @PostMapping("/task/complete_request")
+    public ResponseEntity<?> markTaskAsCompleted(
+            @RequestBody TaskCompletionRequest request
+    ) {
+        return taskService.markTaskAsCompleted(request);
     }
 
 }

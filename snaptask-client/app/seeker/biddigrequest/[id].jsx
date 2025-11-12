@@ -44,7 +44,7 @@ const MakeBidScreen = () => {
     bidAmount: "",
     proposal: "",
     similarWorks: [""],
-    portfolio: "", // ✅ Added portfolio field
+    portfolio: [""], 
     canCompleteInTime: false,
     communicationPreference: "",
     communicationDetail: "",
@@ -209,7 +209,7 @@ const MakeBidScreen = () => {
       tagline: formData.tagline.trim(),
       proposal: formData.proposal.trim(),
       similarWorks: filteredSimilarWorks,
-      portfolio: filteredPortfolio, // ✅ Added portfolio to request body
+      portfolio: filteredPortfolio, 
       bidAmount: parseFloat(formData.bidAmount),
       canCompleteInTime: formData.canCompleteInTime,
       communicationPreference: formData.communicationPreference,

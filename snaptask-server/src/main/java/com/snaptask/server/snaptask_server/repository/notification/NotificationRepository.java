@@ -8,10 +8,10 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends MongoRepository<Notification, String> {
-    // For POSTER
+
     List<Notification> findByReceiverIdsInAndStatus(List<String> receiverIds, NotificationStatus status);
-
-
+    List<Notification> findByTaskId(String taskId);
+    void deleteAllByTaskId(String taskId);
 
 
 }

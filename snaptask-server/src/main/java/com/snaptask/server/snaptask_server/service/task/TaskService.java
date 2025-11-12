@@ -2,6 +2,7 @@ package com.snaptask.server.snaptask_server.service.task;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.*;
+import com.snaptask.server.snaptask_server.dto.bid.AssignedBidInfoDto;
 import com.snaptask.server.snaptask_server.dto.bid.PosterBidSummaryDto;
 import com.snaptask.server.snaptask_server.dto.notification.FCMNotificationDto;
 import com.snaptask.server.snaptask_server.dto.task.*;
@@ -10,6 +11,7 @@ import com.snaptask.server.snaptask_server.exceptions.customExceptions.ResourceN
 import com.snaptask.server.snaptask_server.modals.Bid;
 import com.snaptask.server.snaptask_server.modals.Task;
 import com.snaptask.server.snaptask_server.modals.User;
+import com.snaptask.server.snaptask_server.modals.embedded.CompletionDetail;
 import com.snaptask.server.snaptask_server.repository.bid.BidRepository;
 import com.snaptask.server.snaptask_server.repository.notification.NotificationRepository;
 import com.snaptask.server.snaptask_server.repository.task.TaskRepository;
@@ -247,25 +249,47 @@ public class TaskService {
         return ResponseEntity.ok("Task updated successfully");
     }
 
-    public ResponseEntity<String> deleteTask(DeleteTaskDto dto) {
-        // Fetch current user (poster)
+    @Transactional
+    public ResponseEntity<?> deleteTask(DeleteTaskDto dto) {
+
         User currentUser = helper.getCurrentLoggedInUser();
+        String taskId = dto.getTaskId();
 
-        // Find the task by ID
-        Task task = taskRepository.findById(dto.getTaskId())
-                .orElseThrow(() -> new ResourceNotFoundException("Task with id " + dto.getTaskId() + " not found"));
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task with id " + taskId + " not found"));
 
-        // Ensure that only the poster who created the task can delete it
+
         if (!task.getPosterId().equals(currentUser.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("You are not authorized to delete this task");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    Map.of(
+                            "message", "You are not authorized to delete this task",
+                            "taskId", taskId
+                    )
+            );
         }
 
-        // Delete the task
+        if (task.isAssigned() && task.getAssignedSeekerId() != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of(
+                            "message", "You cannot delete this task because it is already assigned to a seeker",
+                            "taskId", taskId,
+                            "assignedSeekerId", task.getAssignedSeekerId()
+                    )
+            );
+        }
+
+        bidRepository.deleteAllByTaskId(taskId);
+        notificationRepository.deleteAllByTaskId(taskId);
         taskRepository.delete(task);
 
-        return ResponseEntity.ok("Task deleted successfully");
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Task deleted successfully",
+                        "taskId", taskId
+                )
+        );
     }
+
 
     @Transactional(readOnly = true)
     public ResponseEntity<PosterTasksGroupedDto> getPosterTasksSummary() {
@@ -311,16 +335,15 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with ID: " + taskId));
 
-        // Verify that the current user is the poster
+        // Verify poster ownership
         String currentUserId = helper.getCurrentLoggedInUser().getId();
         if (!task.getPosterId().equals(currentUserId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // Fetch associated bids efficiently
+        // Fetch all bids for this task
         List<Bid> bids = bidRepository.findByTaskId(taskId);
 
-        // Map bids to PosterBidSummaryDto
         List<PosterBidSummaryDto> bidDtos = bids.stream()
                 .map(bid -> PosterBidSummaryDto.builder()
                         .id(bid.getId())
@@ -333,7 +356,39 @@ public class TaskService {
                         .build())
                 .toList();
 
-        // Build the PosterTaskDetailDto
+         AssignedBidInfoDto assignedBidInfo = null;
+        if (task.isAssigned() && task.getAssignedBidId() != null) {
+            Bid assignedBid = bidRepository.findById(task.getAssignedBidId()).orElse(null);
+            if (assignedBid != null) {
+                User seeker = userRepository.findById(task.getAssignedSeekerId()).orElse(null);
+                if (seeker != null) {
+                    assignedBidInfo = AssignedBidInfoDto.builder()
+                            .bidId(assignedBid.getId())
+                            .seekerId(seeker.getId())
+                            .seekerName(seeker.getName())
+                            .seekerRating(seeker.getRating())
+                            .seekerCompletedTasks(seeker.getCompletedTasks())
+                            .seekerBio(seeker.getBio())
+                            .tagline(assignedBid.getTagline())
+                            .bidAmount(assignedBid.getBidAmount())
+                            .proposal(assignedBid.getProposal())
+                            .similarWorks(assignedBid.getSimilarWorks())
+                            .portfolio(assignedBid.getPortfolio().getFirst())
+                            .communicationPreference(assignedBid.getCommunicationPreference())
+                            .communicationDetail(assignedBid.getCommunicationDetail())
+                            .build();
+                }
+            }
+        }
+
+         TaskCompletionRequest taskCompletionRequest = null;
+        if (task.getCompletionDetail() != null) {
+            taskCompletionRequest = TaskCompletionRequest.builder()
+                    .note(task.getCompletionDetail().getNote())
+                    .submissionLinks(task.getCompletionDetail().getSubmissionLinks())
+                    .build();
+        }
+
         PosterTaskDetailDto taskDetailDto = PosterTaskDetailDto.builder()
                 .id(task.getId())
                 .title(task.getTitle())
@@ -348,10 +403,63 @@ public class TaskService {
                 .timeline(task.getTimeline())
                 .bidsList(bidDtos)
                 .createdAt(task.getPostedOn())
+                .assignedBidInfo(assignedBidInfo)
+                .taskCompletionRequest(taskCompletionRequest)
                 .build();
 
         return ResponseEntity.ok(taskDetailDto);
     }
+
+    @Transactional
+    public ResponseEntity<Map<String, Object>> approveTaskCompletion(String taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with ID: " + taskId));
+
+        String currentUserId = helper.getCurrentLoggedInUser().getId();
+        if (!task.getPosterId().equals(currentUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    Map.of(
+                            "message", "You are not authorized to approve this task.",
+                            "taskId", taskId
+                    )
+            );
+        }
+
+        if (task.getCompletionDetail() == null || !task.getCompletionDetail().isCompleted()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of(
+                            "message", "No completion request found for this task.",
+                            "taskId", taskId
+                    )
+            );
+        }
+
+        task.getCompletionDetail().setApprovedByPoster(true);
+        task.getCompletionDetail().setReviewedOn(LocalDateTime.now());
+        task.setStatus(TaskStatus.COMPLETED);
+
+        Optional<User> user = userRepository.findById(task.getAssignedSeekerId());
+        user.get().setCompletedTasks(user.get().getCompletedTasks()+1);
+        userRepository.save(user.get());
+
+        if (task.getAssignedSeekerId() != null) {
+            userRepository.findById(task.getAssignedSeekerId()).ifPresent(seeker -> {
+                seeker.setCompletedTasks(seeker.getCompletedTasks() + 1);
+                userRepository.save(seeker);
+            });
+        }
+
+        taskRepository.save(task);
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Task marked as completed successfully.",
+                        "taskId", taskId,
+                        "status", task.getStatus().name()
+                )
+        );
+    }
+
 
     public void sendPushNotification(String expoToken, String title, String body) {
         try {
@@ -381,6 +489,8 @@ public class TaskService {
             System.err.println("❌ Failed to send Expo push notification: " + e.getMessage());
         }
     }
+
+
 
 
 //    ----------------------------------------
@@ -505,7 +615,6 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public ResponseEntity<?> getSeekerTaskDetails(String id) {
-
         Optional<Task> optionalTask = taskRepository.findById(id);
         if (optionalTask.isEmpty()) {
             return ResponseEntity
@@ -523,13 +632,12 @@ public class TaskService {
         }
 
         User poster = posterOpt.get();
-
-
         var currentUser = helper.getCurrentLoggedInUser();
         String seekerId = currentUser.getId();
 
-
         boolean alreadyMadeBid = bidRepository.existsByTaskIdAndSeekerId(task.getId(), seekerId);
+        boolean isAssignedToMe = task.getAssignedSeekerId() != null
+                && task.getAssignedSeekerId().equals(currentUser.getId());
 
         SeekerTaskDetail dto = SeekerTaskDetail.builder()
                 .id(task.getId())
@@ -539,7 +647,8 @@ public class TaskService {
                 .location(task.getMode() != null ? task.getMode().name() : "Remote")
                 .deadline(task.getDeadline() != null ? task.getDeadline().toString() : "N/A")
                 .applicants(task.getBidsCount() + " applicants")
-                .skills(List.of()) // can populate later if needed
+                .isAssignedToMe(isAssignedToMe)
+                .skills(List.of())
                 .status(task.getStatus().name().toLowerCase())
                 .projectType("Freelance")
                 .postedBy(SeekerTaskDetail.PostedBy.builder()
@@ -663,17 +772,108 @@ public class TaskService {
         ));
     }
 
+    @Transactional
+    public ResponseEntity<?> markTaskAsCompleted(TaskCompletionRequest request) {
+        log.info("Seeker {} attempting to mark task  as completed", request.getTaskId());
+        User user = helper.getCurrentLoggedInUser();
+        String seekerId = user.getId();
+
+        Task task = taskRepository.findById(request.getTaskId()).orElse(null);
+        if (task == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Task not found"));
+        }
 
 
+        if (task.getAssignedSeekerId() == null || !task.getAssignedSeekerId().equals(seekerId)) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "You are not authorized to complete this task"));
+        }
 
 
+        if (task.getCompletionDetail() != null) {
+            log.info("Task completion has already been requested");
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Task completion has already been requested"));
+        }
 
 
+        User seeker = userRepository.findById(seekerId)
+                .orElseThrow(() -> new RuntimeException("Seeker not found"));
 
 
+        CompletionDetail completionDetail = CompletionDetail.builder()
+                .completed(true)
+                .note(request.getNote())
+                .submissionLinks(request.getSubmissionLinks())
+                .completedOn(LocalDateTime.now())
+                .approvedByPoster(null)
+                .build();
 
 
+        task.setCompletionDetail(completionDetail);
+        task.setUpdatedAt(LocalDateTime.now());
+        taskRepository.save(task);
 
+
+        Notification notification = Notification.builder()
+                .receiverIds(List.of(task.getPosterId()))
+                .senderId(seekerId)
+                .senderName(seeker.getName())
+                .taskId(task.getId())
+                .taskTitle(task.getTitle())
+                .message(request.getNote())
+                .type(NotificationType.UPDATE)
+                .status(NotificationStatus.NEW)
+                .userRole(UserRole.SEEKER)
+                .targetRole(UserRole.POSTER)
+                .extraInfo("Seeker " + seeker.getName() + " has marked the task as completed and submitted their work.")
+                .build();
+
+        notificationRepository.save(notification);
+
+        log.info("✅ Task {} marked as completed by seeker {}. Notification stored for poster {}",
+                task.getId(), seekerId, task.getPosterId());
+
+
+        try {
+            userRepository.findById(task.getPosterId()).ifPresent(poster -> {
+                String token = poster.getFcmToken();
+                if (token != null && !token.isBlank()) {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("type", "COMPLETION_REQUEST");
+                    data.put("taskId", task.getId());
+                    data.put("taskTitle", task.getTitle());
+                    data.put("seekerName", seeker.getName());
+                    data.put("taskStatus", task.getStatus().name());
+
+                    expoPushService.sendNotification(
+                            token,
+                            "✅ Task Marked as Completed",
+                            seeker.getName() + " has marked the task \"" + task.getTitle() + "\" as completed. Please review their submission and take action.",
+                            data
+                    );
+
+                    log.info("📩 Sent FCM completion notification to poster {} for task {}", poster.getEmail(), task.getId());
+                } else {
+                    log.warn("⚠️ Poster {} has no valid FCM token", poster.getEmail());
+                }
+            });
+        } catch (Exception e) {
+            log.error("❌ Failed to send completion request notification for task {}: {}", task.getId(), e.getMessage());
+        }
+
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Task marked as completed successfully",
+                "taskId", task.getId(),
+                "completionNote", request.getNote(),
+                "submittedLinks", request.getSubmissionLinks()
+        ));
+    }
 
 
 

@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/poster")
 public class PosterController {
@@ -43,7 +45,7 @@ public class PosterController {
 
 
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteTask(@Valid @RequestBody DeleteTaskDto dto) {
+    public ResponseEntity<?> deleteTask(@Valid @RequestBody DeleteTaskDto dto) {
         return taskService.deleteTask(dto);
     }
 
@@ -75,6 +77,11 @@ public class PosterController {
     @PostMapping("/{bidId}/reject")
     public ResponseEntity<?> rejectBid(@PathVariable String bidId) {
         return bidServices.rejectBid(bidId);
+    }
+
+    @PostMapping("/{taskId}/approve_completion")
+    public ResponseEntity<Map<String, Object>> approveTaskCompletion(@PathVariable String taskId) {
+        return taskService.approveTaskCompletion(taskId);
     }
 
 

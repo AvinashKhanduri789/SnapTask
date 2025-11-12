@@ -37,7 +37,10 @@ export const NotificationProvider = ({ children }) => {
   const responseListener = useRef(null);
 
   const userRole = userData?.role;
+  console.log("userrole in notification context is ---> ", userRole);
   const profileEndpointPrefix = userRole === "POSTER" ? "poster" : "seeker";
+   console.log("profile endpoint prefix is  ---> ", profileEndpointPrefix);
+  
 
   //  Configure global notification behavior
   Notifications.setNotificationHandler({
@@ -77,13 +80,13 @@ export const NotificationProvider = ({ children }) => {
         console.log(" Expo Push Token:", token);
 
         
-
+        console.log("endpoint to register fcm is --> ",`/${profileEndpointPrefix}/profile/fcm` )
         const result = await request(api.post(`/${profileEndpointPrefix}/profile/fcm`, {token}));
 
         if (result.ok) {
           console.log("Notification registered successfully");
         } else {
-          console.log("Failed to register notification-->", result.error.detail);
+          console.log("Failed to register notification-->", result.error);
         }
 
       } catch (err) {
@@ -112,7 +115,7 @@ export const NotificationProvider = ({ children }) => {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, []);
+  }, [userRole]);
 
   const value = {
     expoPushToken,

@@ -2,21 +2,51 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import CompletionRequestSheet from "../../../components/seeker/task/CompletionRequestSheet";
 import {
   Text,
   View,
   TouchableOpacity,
   ScrollView,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  Platform,
+  Modal
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; 
-import {api} from "../../../util/requester";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { api } from "../../../util/requester";
 import { useApi } from "../../../util/useApi";
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+const scale = (size) => {
+  const baseWidth = 375;
+  return (screenWidth / baseWidth) * size;
+};
+
+const scaleFont = (size) => {
+  const baseWidth = 375;
+  const newSize = (screenWidth / baseWidth) * size;
+  return Math.round(newSize);
+};
+
+const verticalScale = (size) => {
+  const baseHeight = 667;
+  return (screenHeight / baseHeight) * size;
+};
+
+const moderateScale = (size, factor = 0.5) => {
+  return size + (scale(size) - size) * factor;
+};
 
 const TaskDetailScreen = () => {
   const router = useRouter();
   const { taskId } = useLocalSearchParams();
   const [taskData, setTaskData] = useState(null);
   const { request, isLoading, error } = useApi();
+  const [showCompletionSheet, setShowCompletionSheet] = useState(false);
+
 
   useEffect(() => {
     fetchTaskDetails();
@@ -25,7 +55,7 @@ const TaskDetailScreen = () => {
   const fetchTaskDetails = async () => {
     try {
       const response = await request(api.get(`/seeker/tasks/${taskId}`));
-      
+
       if (response.ok) {
         setTaskData(response.data);
       } else {
@@ -42,242 +72,570 @@ const TaskDetailScreen = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-slate-50">
-        <Text>Loading...</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-slate-50">
-        <Text className="text-red-500 mb-4">Error loading task details</Text>
-        <TouchableOpacity 
-          onPress={fetchTaskDetails}
-          className="bg-blue-500 px-4 py-2 rounded-lg"
-        >
-          <Text className="text-white">Retry</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error loading task details</Text>
+          <TouchableOpacity
+            onPress={fetchTaskDetails}
+            style={styles.retryButton}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (!taskData) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-slate-50">
-        <Text>No task data found</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>No task data found</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-4 bg-white border-b border-slate-200">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full bg-slate-100 items-center justify-center mr-3"
+    <View style={styles.container}>
+      <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+
+      {/* SafeAreaView for top only */}
+      <SafeAreaView style={styles.safeAreaTop} edges={['top']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons name="chevron-back" size={scaleFont(22)} color="#475569" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {taskData.title}
+          </Text>
+          <View style={styles.headerRightPlaceholder} />
+        </View>
+      </SafeAreaView>
+
+      {/* Main content with bottom safe area */}
+      <SafeAreaView style={styles.safeAreaMain} edges={['left', 'right']}>
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Ionicons name="chevron-back" size={22} color="#475569" />
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold text-slate-800 flex-1">
-          {taskData.title}
-        </Text>
-        <Ionicons name="bookmark-outline" size={22} color="#64748b" />
-      </View>
+          {/* Task Summary */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              Task Summary
+            </Text>
 
-      <ScrollView
-        className="flex-1 px-4"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* Task Summary */}
-        <View className="bg-white rounded-2xl p-5 mt-5 shadow-sm border border-slate-100">
-          <Text className="text-lg font-bold text-slate-800 mb-3">
-            Task Summary
-          </Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="cash-outline" size={scaleFont(18)} color="#3B82F6" />
+              <Text style={styles.infoText}>
+                <Text style={styles.infoLabel}>Budget: </Text>
+                {taskData.budget}
+              </Text>
+            </View>
 
-          <View className="flex-row items-center mb-2">
-            <Ionicons name="cash-outline" size={18} color="#3B82F6" />
-            <Text className="text-slate-600 ml-2">
-              <Text className="font-semibold">Budget: </Text>
-              {taskData.budget}
+            <View style={styles.infoRow}>
+              <Ionicons name="location-outline" size={scaleFont(18)} color="#3B82F6" />
+              <Text style={styles.infoText}>
+                <Text style={styles.infoLabel}>Location: </Text>
+                {taskData.location}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar-outline" size={scaleFont(18)} color="#3B82F6" />
+              <Text style={styles.infoText}>
+                <Text style={styles.infoLabel}>Deadline: </Text>
+                {taskData.deadline}
+              </Text>
+            </View>
+          </View>
+
+          {/* Applicants + Status */}
+          <View style={styles.statsContainer}>
+            <View style={[styles.statCard, styles.statCardLeft]}>
+              <Text style={styles.statLabel}>
+                Applicants
+              </Text>
+              <Text style={styles.statValue}>
+                {taskData.applicants}
+              </Text>
+            </View>
+            <View style={[styles.statCard, styles.statCardRight]}>
+              <Text style={styles.statLabel}>
+                Status
+              </Text>
+              <Text style={[styles.statValue, styles.statusText]}>
+                {taskData.status}
+              </Text>
+            </View>
+          </View>
+
+          {/* Task Description */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              Task Description
+            </Text>
+            <Text style={styles.descriptionText}>
+              {taskData.description}
             </Text>
           </View>
 
-          <View className="flex-row items-center mb-2">
-            <Ionicons name="location-outline" size={18} color="#3B82F6" />
-            <Text className="text-slate-600 ml-2">
-              <Text className="font-semibold">Location: </Text>
-              {taskData.location}
+          {/* Project Type */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              Project Type
+            </Text>
+            <Text style={styles.projectTypeText}>
+              {taskData.projectType}
             </Text>
           </View>
 
-          <View className="flex-row items-center">
-            <Ionicons name="calendar-outline" size={18} color="#3B82F6" />
-            <Text className="text-slate-600 ml-2">
-              <Text className="font-semibold">Deadline: </Text>
-              {taskData.deadline}
+          {/* Required Skills */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              Required Skills
             </Text>
+            <View style={styles.skillsContainer}>
+              {taskData.skills.map((skill, index) => (
+                <View
+                  key={index}
+                  style={styles.skillTag}
+                >
+                  <Text style={styles.skillText}>
+                    {skill}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
 
-        {/* Applicants + Status */}
-        <View className="flex-row mt-4">
-          <View className="flex-1 bg-white rounded-2xl p-4 mr-2 border border-slate-100 shadow-sm items-center">
-            <Text className="text-slate-500 text-sm font-medium mb-1">
-              Applicants
+          {/* About the Poster */}
+          <View style={styles.posterCard}>
+            <Text style={styles.cardTitle}>
+              About the Poster
             </Text>
-            <Text className="text-xl font-bold text-slate-800">
-              {taskData.applicants}
-            </Text>
-          </View>
-          <View className="flex-1 bg-white rounded-2xl p-4 ml-2 border border-slate-100 shadow-sm items-center">
-            <Text className="text-slate-500 text-sm font-medium mb-1">
-              Status
-            </Text>
-            <Text className="text-lg font-semibold text-green-600">
-              {taskData.status}
-            </Text>
-          </View>
-        </View>
 
-        {/* Task Description */}
-        <View className="bg-white rounded-2xl p-5 mt-4 border border-slate-100 shadow-sm">
-          <Text className="text-lg font-bold text-slate-800 mb-2">
-            Task Description
-          </Text>
-          <Text className="text-slate-600 leading-relaxed text-base">
-            {taskData.description}
-          </Text>
-        </View>
-
-        {/* Project Type */}
-        <View className="bg-white rounded-2xl p-5 mt-4 border border-slate-100 shadow-sm">
-          <Text className="text-lg font-bold text-slate-800 mb-1">
-            Project Type
-          </Text>
-          <Text className="text-blue-600 font-medium">
-            {taskData.projectType}
-          </Text>
-        </View>
-
-        {/* Required Skills */}
-        <View className="bg-white rounded-2xl p-5 mt-4 border border-slate-100 shadow-sm">
-          <Text className="text-lg font-bold text-slate-800 mb-3">
-            Required Skills
-          </Text>
-          <View className="flex-row flex-wrap">
-            {taskData.skills.map((skill, index) => (
-              <View
-                key={index}
-                className="bg-blue-50 px-3 py-2 rounded-full mr-2 mb-2 border border-blue-100"
-              >
-                <Text className="text-blue-700 font-medium text-sm">
-                  {skill}
+            {/* Poster Header */}
+            <View style={styles.posterHeader}>
+              <View style={styles.posterAvatar}>
+                <Text style={styles.posterInitial}>
+                  {taskData.postedBy.name.charAt(0)}
                 </Text>
               </View>
-            ))}
-          </View>
-        </View>
 
-        {/* About the Poster */}
-        <View className="bg-white rounded-2xl p-6 mt-6 mb-12 border border-slate-100 shadow-sm">
-          <Text className="text-lg font-bold text-slate-800 mb-5">
-            About the Poster
-          </Text>
+              <View style={styles.posterInfo}>
+                <Text style={styles.posterName}>
+                  {taskData.postedBy.name}
+                </Text>
+                <Text style={styles.posterRole}>
+                  {taskData.postedBy.role}
+                </Text>
+              </View>
+            </View>
 
-          {/* Poster Header */}
-          <View className="flex-row items-center mb-5">
-            <View className="w-14 h-14 rounded-full bg-blue-100 items-center justify-center mr-4">
-              <Text className="text-blue-700 text-lg font-bold">
-                {taskData.postedBy.name.charAt(0)}
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Rating */}
+            <View style={styles.ratingContainer}>
+              <Ionicons name="star" size={scaleFont(18)} color="#F59E0B" />
+              <Text style={styles.ratingText}>
+                {taskData.postedBy.rating}{" "}
+                <Text style={styles.reviewsText}>
+                  ({taskData.postedBy.reviews} reviews)
+                </Text>
               </Text>
             </View>
 
-            <View className="flex-1">
-              <Text className="text-xl font-bold text-slate-800">
-                {taskData.postedBy.name}
-              </Text>
-              <Text className="text-slate-500 mt-1 leading-relaxed">
-                {taskData.postedBy.role}
-              </Text>
-            </View>
-          </View>
+            {/* Poster Stats */}
+            <View style={styles.posterStats}>
+              <View style={styles.posterStat}>
+                <Ionicons name="checkmark-done-circle-outline" size={scaleFont(20)} color="#10B981" />
+                <Text style={styles.posterStatText}>
+                  {taskData.postedBy.completedTasks} Tasks Completed
+                </Text>
+              </View>
 
-          {/* Divider */}
-          <View className="border-t border-slate-200 my-5" />
+              <View style={styles.posterStat}>
+                <Ionicons name="time-outline" size={scaleFont(20)} color="#3B82F6" />
+                <Text style={styles.posterStatText}>
+                  {taskData.postedBy.responseTime}
+                </Text>
+              </View>
 
-          {/* Rating */}
-          <View className="flex-row items-center mb-5">
-            <Ionicons name="star" size={18} color="#F59E0B" />
-            <Text className="text-slate-700 font-semibold ml-2">
-              {taskData.postedBy.rating}{" "}
-              <Text className="text-slate-500 font-normal">
-                ({taskData.postedBy.reviews} reviews)
-              </Text>
-            </Text>
-          </View>
-
-          {/* Poster Stats */}
-          <View className="space-y-4">
-            <View className="flex-row items-center">
-              <Ionicons name="checkmark-done-circle-outline" size={20} color="#10B981" />
-              <Text className="text-slate-600 ml-3 leading-relaxed">
-                {taskData.postedBy.completedTasks} Tasks Completed
-              </Text>
-            </View>
-
-            <View className="flex-row items-center">
-              <Ionicons name="time-outline" size={20} color="#3B82F6" />
-              <Text className="text-slate-600 ml-3 leading-relaxed">
-                {taskData.postedBy.responseTime}
-              </Text>
-            </View>
-
-            <View className="flex-row items-center">
-              <Ionicons name="calendar-outline" size={20} color="#6366F1" />
-              <Text className="text-slate-600 ml-3 leading-relaxed">
-                Member since {taskData.postedBy.memberSince}
-              </Text>
+              <View style={styles.posterStat}>
+                <Ionicons name="calendar-outline" size={scaleFont(20)} color="#6366F1" />
+                <Text style={styles.posterStatText}>
+                  Member since {taskData.postedBy.memberSince}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Button - Conditionally Rendered */}
-      <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-5 py-4">
-        {taskData.alredyMadebid ? (
-          // Already made bid - Show disabled state
-          <View className="rounded-xl overflow-hidden">
-            <View className="py-3 items-center justify-center rounded-xl flex-row space-x-2 bg-gray-400">
-              <Ionicons name="checkmark-circle" size={18} color="#fff" />
-              <Text className="text-white font-semibold text-base">
-                Bid Already Submitted
-              </Text>
-            </View>
-          </View>
-        ) : (
-          // No bid made yet - Show active button
-          <TouchableOpacity
-            onPress={() => router.push(`/seeker/biddigrequest/${taskData.id}`)}
-            activeOpacity={0.85}
-            className="rounded-xl overflow-hidden"
-          >
-            <View
-              style={{ backgroundColor: "#2563EB" }}
-              className="py-3 items-center justify-center rounded-xl flex-row space-x-2"
-            >
-              <Ionicons name="send" size={18} color="#fff" />
-              <Text className="text-white font-semibold text-base">
-                Make Bidding Request
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        </ScrollView>
+      </SafeAreaView>
+       <SafeAreaView style={styles.safeAreaBottom} edges={['bottom']}>
+  <View style={styles.bottomContainer}>
+    {taskData.assignedToMe ? (
+      // 🟢 Assigned to current seeker → show "Mark as Completed"
+      <TouchableOpacity
+        onPress={() => setShowCompletionSheet(true)}
+        activeOpacity={0.85}
+        style={[styles.bottomButton, styles.activeButton]}
+      >
+        <Ionicons name="checkmark-done" size={scaleFont(18)} color="#fff" />
+        <Text style={styles.bottomButtonText}>Mark as Completed</Text>
+      </TouchableOpacity>
+    ) : taskData.alredyMadebid ? (
+      // 🟡 Made bid but not assigned yet → disable
+      <View style={[styles.bottomButton, styles.disabledButton]}>
+        <Ionicons name="checkmark-circle" size={scaleFont(18)} color="#fff" />
+        <Text style={styles.bottomButtonText}>Bid Already Submitted</Text>
       </View>
-    </SafeAreaView>
+    ) : (
+      // 🔵 No bid made yet → show bid button
+      <TouchableOpacity
+        onPress={() => router.push(`/seeker/biddigrequest/${taskData.id}`)}
+        activeOpacity={0.85}
+        style={[styles.bottomButton, styles.activeButton]}
+      >
+        <Ionicons name="send" size={scaleFont(18)} color="#fff" />
+        <Text style={styles.bottomButtonText}>Make Bidding Request</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+
+  {/* Completion Request Modal */}
+  <Modal
+    animationType="slide"
+    transparent={true}
+    visible={showCompletionSheet}
+    onRequestClose={() => setShowCompletionSheet(false)}
+  >
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "flex-end",
+        backgroundColor: "rgba(0,0,0,0.4)",
+      }}
+    >
+      <CompletionRequestSheet
+        taskId={taskData.id}
+        onClose={() => setShowCompletionSheet(false)}
+      />
+    </View>
+  </Modal>
+</SafeAreaView>
+
+
+
+
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  safeAreaTop: {
+    backgroundColor: 'white',
+  },
+  safeAreaMain: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  safeAreaBottom: {
+    backgroundColor: 'white',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  loadingText: {
+    fontSize: scaleFont(16),
+    color: '#64748b',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  errorText: {
+    fontSize: scaleFont(16),
+    color: '#ef4444',
+    marginBottom: verticalScale(12),
+  },
+  retryButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: verticalScale(8),
+    borderRadius: moderateScale(8),
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: scaleFont(14),
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: verticalScale(12),
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  backButton: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: moderateScale(12),
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: scaleFont(18),
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  headerRightPlaceholder: {
+    width: moderateScale(40),
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: moderateScale(16),
+    paddingBottom: verticalScale(20),
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: moderateScale(16),
+    padding: moderateScale(20),
+    marginTop: verticalScale(16),
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: scaleFont(18),
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: verticalScale(12),
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: verticalScale(8),
+  },
+  infoText: {
+    fontSize: scaleFont(14),
+    color: '#64748b',
+    marginLeft: moderateScale(8),
+  },
+  infoLabel: {
+    fontWeight: '600',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    marginTop: verticalScale(16),
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: moderateScale(16),
+    padding: moderateScale(16),
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    alignItems: 'center',
+  },
+  statCardLeft: {
+    marginRight: moderateScale(8),
+  },
+  statCardRight: {
+    marginLeft: moderateScale(8),
+  },
+  statLabel: {
+    fontSize: scaleFont(14),
+    color: '#64748b',
+    fontWeight: '500',
+    marginBottom: verticalScale(4),
+  },
+  statValue: {
+    fontSize: scaleFont(20),
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  statusText: {
+    fontSize: scaleFont(16),
+    color: '#10b981',
+    fontWeight: '600',
+  },
+  descriptionText: {
+    fontSize: scaleFont(14),
+    color: '#64748b',
+    lineHeight: scaleFont(20),
+  },
+  projectTypeText: {
+    fontSize: scaleFont(16),
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  skillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  skillTag: {
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: verticalScale(6),
+    borderRadius: moderateScale(16),
+    marginRight: moderateScale(8),
+    marginBottom: verticalScale(8),
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  skillText: {
+    fontSize: scaleFont(12),
+    color: '#1d4ed8',
+    fontWeight: '500',
+  },
+  posterCard: {
+    backgroundColor: 'white',
+    borderRadius: moderateScale(16),
+    padding: moderateScale(20),
+    marginTop: verticalScale(20),
+    marginBottom: verticalScale(20),
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  posterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: verticalScale(16),
+  },
+  posterAvatar: {
+    width: moderateScale(56),
+    height: moderateScale(56),
+    borderRadius: moderateScale(28),
+    backgroundColor: '#dbeafe',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: moderateScale(16),
+  },
+  posterInitial: {
+    fontSize: scaleFont(20),
+    color: '#1d4ed8',
+    fontWeight: 'bold',
+  },
+  posterInfo: {
+    flex: 1,
+  },
+  posterName: {
+    fontSize: scaleFont(20),
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  posterRole: {
+    fontSize: scaleFont(14),
+    color: '#64748b',
+    marginTop: verticalScale(4),
+    lineHeight: scaleFont(20),
+  },
+  divider: {
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    marginVertical: verticalScale(16),
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: verticalScale(16),
+  },
+  ratingText: {
+    fontSize: scaleFont(14),
+    color: '#374151',
+    fontWeight: '600',
+    marginLeft: moderateScale(8),
+  },
+  reviewsText: {
+    color: '#64748b',
+    fontWeight: 'normal',
+  },
+  posterStats: {
+    gap: verticalScale(12),
+  },
+  posterStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  posterStatText: {
+    fontSize: scaleFont(14),
+    color: '#64748b',
+    marginLeft: moderateScale(12),
+    lineHeight: scaleFont(20),
+  },
+  bottomContainer: {
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: verticalScale(12),
+  },
+  bottomButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: verticalScale(14),
+    borderRadius: moderateScale(12),
+    gap: moderateScale(8),
+  },
+  activeButton: {
+    backgroundColor: '#2563eb',
+  },
+  disabledButton: {
+    backgroundColor: '#9ca3af',
+  },
+  bottomButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: scaleFont(16),
+  },
+});
 
 export default TaskDetailScreen;

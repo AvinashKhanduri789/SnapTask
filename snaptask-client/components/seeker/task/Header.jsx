@@ -10,7 +10,7 @@ const Header = () => {
 
   return (
     <LinearGradient
-      colors={['#3B82F6', '#60A5FA']}
+      colors={['#3B82F6', '#3B82F6']} // Changed to solid blue to match
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.container}
@@ -33,11 +33,13 @@ const Header = () => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
-    paddingTop: 40, // more top padding for status bar
+    paddingTop: 2, 
     paddingBottom: 24,
     borderBottomLeftRadius: 54,
     borderBottomRightRadius: 54,
-    marginBottom:5
+    marginBottom: 15,
+    // Remove any margins that might create gaps
+    marginTop: 0,
   },
   row: {
     flexDirection: 'row',

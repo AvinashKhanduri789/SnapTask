@@ -1,5 +1,6 @@
 package com.snaptask.server.snaptask_server.dto.task;
 
+import com.snaptask.server.snaptask_server.dto.bid.AssignedBidInfoDto;
 import com.snaptask.server.snaptask_server.dto.bid.PosterBidSummaryDto;
 import com.snaptask.server.snaptask_server.enums.TaskStatus;
 import com.snaptask.server.snaptask_server.enums.WorkMode;
@@ -65,4 +66,10 @@ public class PosterTaskDetailDto {
 
     @PastOrPresent(message = "Created date cannot be in the future")
     private LocalDateTime createdAt;
+
+    private AssignedBidInfoDto assignedBidInfo;
+
+    private TaskCompletionRequest taskCompletionRequest;
+
+
 }

@@ -22,7 +22,7 @@ public class CreateBidDto {
     private String proposal;
 
     private List<String> similarWorks;
-    private String portfolio;
+    private List<String> portfolio;
 
     @NotNull(message = "Bid amount is required")
     @DecimalMin(value = "1.0", message = "Bid amount must be greater than zero")

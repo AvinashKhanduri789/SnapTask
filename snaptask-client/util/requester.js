@@ -3,7 +3,7 @@
   import AsyncStorage from "@react-native-async-storage/async-storage";
 
   export const api = axios.create({
-    baseURL: "http://10.50.30.30:4000", // ✅ centralized backend URL
+   baseURL: "http://10.241.53.30:4000", 
     timeout: 10000,
     headers: {
       "Content-Type": "application/json",
@@ -43,7 +43,7 @@ api.interceptors.response.use(
   },
   (error) => {
     const status = error?.response?.status || 0;
-  
+    console.log("inside requester interceptor error is --->", error);
     if (status === 304) {
       const successResponse = {
         ok: true,
@@ -54,7 +54,6 @@ api.interceptors.response.use(
     }
     
     const data = error?.response?.data || {};
-
     const normalized = {
       ok: false,
       status,

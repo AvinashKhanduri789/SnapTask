@@ -52,6 +52,9 @@ public class SeekerTaskDetail {
 
     private boolean alredyMadebid;
 
+    private boolean isAssignedToMe;
+
+
     /**
      * Nested class representing task poster info.
      * Encapsulates key details about the person who posted the task.

@@ -70,10 +70,10 @@ public class ExpoPushService {
      * @return true if successfully sent/accepted by Expo, false otherwise
      */
     @Async
-    public boolean sendNotification(String expoToken, String title, String body, Map<String, Object> data) {
+    public void sendNotification(String expoToken, String title, String body, Map<String, Object> data) {
         if (expoToken == null || expoToken.isBlank()) {
             log.warn("sendNotification called with null/blank token");
-            return false;
+            return;
         }
 
         Map<String, Object> message = Map.of(
@@ -85,88 +85,68 @@ public class ExpoPushService {
         );
 
         int maxRetries = 3;
-        int attempt = 0;
-        long backoffMillis = 500; // initial backoff
+        long backoffMillis = 500;
 
-        while (attempt < maxRetries) {
-            attempt++;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 ResponseEntity<String> response = restTemplate.postForEntity(EXPO_PUSH_URL, message, String.class);
                 String responseBody = response.getBody();
                 log.debug("Expo push response (attempt {}): status={}, body={}", attempt, response.getStatusCode(), responseBody);
 
-                // Expo returns a JSON array when sending an array, but for a single message it returns an object.
-                // We'll parse generically and check for "data" or "errors".
                 if (response.getStatusCode().is2xxSuccessful() && responseBody != null && !responseBody.isBlank()) {
-                    try {
-                        JsonNode root = objectMapper.readTree(responseBody);
+                    JsonNode root = objectMapper.readTree(responseBody);
+                    JsonNode entry = root.isArray() ? root.get(0) : root;
 
-                        // If the response is an array (expo returns array for batch), handle first element
-                        JsonNode entry = root.isArray() ? root.get(0) : root;
+                    if (entry == null) {
+                        log.warn("Unexpected empty response from Expo for token {}", expoToken);
+                    } else {
+                        if ((entry.has("status") && "ok".equalsIgnoreCase(entry.get("status").asText())) ||
+                                (entry.has("data") && entry.get("data").has("status") &&
+                                        "ok".equalsIgnoreCase(entry.get("data").get("status").asText())) ||
+                                (entry.has("data") && entry.get("data").has("id"))) {
 
-                        if (entry == null) {
-                            log.warn("Unexpected empty response from Expo for token {}", expoToken);
-                            return false;
+                            log.info("Expo accepted message for token {} (id: {})",
+                                    expoToken,
+                                    entry.path("data").path("id").asText("unknown"));
+                            return;
                         }
 
-                        // Check for success/ref
-                        if (entry.has("data") && entry.get("data").has("status") &&
-                                "ok".equalsIgnoreCase(entry.get("data").path("status").asText(null))) {
-                            log.info("✅ Expo accepted message for token {} (expo id: {})", expoToken, entry.get("data").path("id").asText(null));
-                            return true;
-                        }
-
-                        // Newer Expo responses can include "status" and "message" fields or "error"
-                        if (entry.has("status") && "ok".equalsIgnoreCase(entry.get("status").asText())) {
-                            log.info("✅ Expo accepted message for token {}", expoToken);
-                            return true;
-                        }
-
-                        // Check for explicit error
                         if (entry.has("status") && "error".equalsIgnoreCase(entry.get("status").asText())) {
                             String err = entry.path("message").asText(entry.path("details").toString());
                             log.warn("Expo returned error for token {}: {}", expoToken, err);
-
-                            // If it's an invalid token, caller should remove it from DB
-                            if (err.toLowerCase().contains("device_not_registered") || err.toLowerCase().contains("invalid")) {
-                                log.warn("Invalid/expired Expo token: {}", expoToken);
-                                return false;
+                            if (err.toLowerCase().contains("device_not_registered") ||
+                                    err.toLowerCase().contains("invalid")) {
+                                log.warn("Invalid or expired Expo token: {}", expoToken);
                             }
-
-                            // otherwise, break/return false (non-retriable)
-                            return false;
+                            return;
                         }
 
-                        // If no clear success marker, treat as success for 2xx (best-effort)
                         log.info("Expo push response ambiguous but 2xx - treating as success for token {}", expoToken);
-                        return true;
-
-                    } catch (IOException e) {
-                        log.warn("Failed to parse Expo response JSON: {}", e.getMessage());
-                        // If parsing fails but HTTP was 2xx, consider success (or you can choose to retry)
-                        return true;
+                        return;
                     }
                 } else {
-                    log.warn("Non-2xx response from Expo (attempt {}): status={}, body={}", attempt, response.getStatusCode(), responseBody);
+                    log.warn("Non-2xx response from Expo (attempt {}): status={}, body={}",
+                            attempt, response.getStatusCode(), responseBody);
                 }
             } catch (Exception ex) {
                 log.warn("Error sending notification to Expo (attempt {}): {}", attempt, ex.getMessage());
             }
 
-            // Backoff before retrying
-            try {
-                Thread.sleep(backoffMillis);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-                log.error("Interrupted while backing off retries", ie);
-                return false;
+            if (attempt < maxRetries) {
+                try {
+                    Thread.sleep(backoffMillis);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    log.error("Interrupted while backing off retries", ie);
+                    return;
+                }
+                backoffMillis *= 2;
             }
-            backoffMillis *= 2;
         }
 
         log.error("Failed to send Expo notification to token {} after {} attempts", expoToken, maxRetries);
-        return false;
     }
+
 
 
 }

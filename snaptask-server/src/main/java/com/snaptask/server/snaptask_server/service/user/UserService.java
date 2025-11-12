@@ -58,6 +58,7 @@ public class UserService {
         // 3️⃣ Idempotent update — update only if changed
         String existingToken = user.getFcmToken();
         if (dto.getToken().equals(existingToken)) {
+            log.info("Expo token alredy exist");
             return ResponseEntity
                     .ok("Token already up-to-date");
         }

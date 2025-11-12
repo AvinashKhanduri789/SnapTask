@@ -14,4 +14,5 @@ public interface TaskRepository extends MongoRepository<Task,String> {
     List<Task> findByCategoryAndIsAssignedFalse(String category);
     List<Task> findByAssignedSeekerIdAndIsAssignedTrue(String assignedSeekerId);
     List<Task> findByAssignedSeekerIdAndStatus(String assignedSeekerId, TaskStatus status);
+
 }

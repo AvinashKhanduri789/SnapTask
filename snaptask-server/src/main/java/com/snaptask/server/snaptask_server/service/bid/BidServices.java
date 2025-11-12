@@ -83,7 +83,7 @@ public class BidServices {
                 .communicationPreference(nonNull(bid.getCommunicationPreference(), "Not specified"))
                 .communicationDetail(nonNull(bid.getCommunicationDetail(), ""))
                 .bidStatus(bid.getBidStatus() != null ? bid.getBidStatus().name() : "PENDING")
-                .portfolio(nonNull(bid.getPortfolio(), ""))
+                .portfolio(nonNull(bid.getPortfolio().getFirst(), ""))
                 .responseTime(nonNull(bid.getResponseTime(),
                         seeker != null && seeker.getBio() != null ? seeker.getBio() : "N/A"))
                 .memberSince(nonNull(bid.getMemberSince(),

@@ -181,20 +181,24 @@ const Notifications = () => {
 
   return (
     <View className="flex-1 bg-slate-50">
-      {/* Header */}
+      {/* Header with curved background */}
       <LinearGradient
-        colors={['#6366F1', '#3B82F6', '#60A5FA']}
+        colors={['#3B82F6', '#3B82F6']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="pt-16 pb-8 px-6 rounded-b-3xl mb-5"
-        style={{ zIndex: 10 }}
+        end={{ x: 1, y: 0 }}
+        className="pt-16 pb-8 px-6"
+        style={{ 
+          borderBottomLeftRadius: 54,
+          borderBottomRightRadius: 54,
+          marginBottom: 15,
+        }}
       >
         <View className="flex-row justify-between items-center">
           <View className="flex-1">
             <Text className="text-3xl font-bold text-white mb-2">
               Notifications
             </Text>
-            <Text className="text-purple-100 text-base font-medium">
+            <Text className="text-blue-100 text-base font-medium">
               {notifications.length} unread notifications
             </Text>
           </View>
@@ -217,7 +221,6 @@ const Notifications = () => {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 30 }}
-        style={{ marginTop: -20, zIndex: 1 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
