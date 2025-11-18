@@ -1,10 +1,11 @@
   // api.js
   import axios from "axios";
   import AsyncStorage from "@react-native-async-storage/async-storage";
-
+  // https://snap-task-server.onrender.com
+  // http://10.241.53.30:4000
   export const api = axios.create({
-   baseURL: "http://10.241.53.30:4000", 
-    timeout: 10000,
+   baseURL: "https://snap-task-server.onrender.com", 
+    // timeout: 10000,
     headers: {
       "Content-Type": "application/json",
     },

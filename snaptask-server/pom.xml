@@ -98,6 +98,13 @@
 			<version>9.2.0</version>
 		</dependency>
 
+<!--		sendgrid-->
+		<dependency>
+			<groupId>com.sendgrid</groupId>
+			<artifactId>sendgrid-java</artifactId>
+			<version>4.10.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
