@@ -1,98 +1,194 @@
-🧠 SnapTask — Smart Task Collaboration Platform
+SnapTask
 
-SnapTask is a cross-platform mobile and web-ready application designed to connect Posters (who create and manage tasks) and Seekers (who complete them).
-Built with React Native (Expo Router) and a Spring Boot + MongoDB backend, SnapTask provides real-time notifications, secure authentication, and a scalable data model — ideal for production-level collaboration systems.
+SnapTask is a task-based collaboration app where people who need work done (Posters) can post tasks, and people willing to do the work (Seekers) can bid and complete them.
+The goal of this project is to provide a smooth, real-world experience where posting tasks, managing bids, handling notifications, and completing work feels simple and reliable.
 
-🚀 Features
-🔐 Authentication & Authorization
+This project includes a React Native (Expo Router) mobile application and a Spring Boot + MongoDB backend.
+Both sides are built to be scalable and ready for production-level use.
 
-JWT-based authentication using Spring Security
+Android Preview Build
 
-Role-based Access Control (RBAC) for Poster and Seeker roles
+You can directly download and install the latest Android preview build using the link below.
+This is the same build I use for testing the app on real devices:
 
-Secure password reset and email verification flow
+Download Build:
+https://expo.dev/accounts/avinash_khanduri.dev/projects/HelpHive_client/builds/08033560-d01f-415d-905c-330d49f4fd48
 
-Integrated global exception handling for consistent API responses
+How SnapTask Works 
 
-📱 Client (React Native + Expo)
+Below is a breakdown of how different parts of the app work.
+Each section also includes a screenshot placeholder so you can replace them later.
 
-Built with Expo Router for modular navigation
+1. Authentication and Authorization (JWT + RBAC)
 
-Expo Notifications for foreground and background push alerts
+The app uses a proper authentication system built with Spring Security.
+Every user gets a JWT token after login, and based on their role (Poster or Seeker), they see different screens and features.
 
-Axios API integration with centralized request handling (JWT + error states)
+The RBAC system makes sure Posters cannot access Seeker-only APIs and vice-versa.
+This keeps everything clean and prevents weird edge-case bugs.
 
-Separate Poster and Seeker flows with dynamic tab navigation
+What it means for real users:
+People only see what they’re supposed to see.
 
-Optimized context management for authentication, user profile, and notifications
+Screenshot:
+![Auth Screen1](screenshots/auth1.jpg)
+![Auth Screen2](screenshots/auth2.jpg)
+![Auth Screen3](screenshots/auth3.jpg)
 
-⚙️ Backend (Spring Boot + MongoDB)
+2. Complete Poster Flow (Task Posting, Managing, Assigning)
 
-Spring Data MongoDB for scalable document modeling
+Posters can create tasks by filling in details like title, category, budget, deadline, and task mode.
+Once a task is posted, Posters can:
 
-Entities: Task, Bid, Notification, User with proper indexing and lightweight references
+See bids coming from Seekers
 
-Firebase Cloud Messaging (FCM) integration for notifications
+Check seeker profiles
 
-DTO-based request/response handling for clean client communication
+Accept or reject bids
 
-Production-ready global error handling with ProblemDetail
+Assign the task
 
-📨 Notification System
+Track progress
 
-Real-time notification delivery via Expo and Firebase FCM
+Close the task after completion
 
-Topic and device-based messaging
+This makes the workflow similar to real gig platforms but much simpler.
 
-Notification service handles background and foreground states
+Screenshot:
+![Poster Flow 1](screenshots/poster dashbord.jpg)
+![Poster Flow 2](screenshots/poster dashbord (2).jpg)
+![Poster Flow 1](screenshots/posterDashbord.jpg)
 
-Centralized DTOs for PosterNotification, SeekerNotification, and system alerts
+3. Seeker Flow (Bidding + Completion)
 
-🏗️ Tech Stack
-Layer	Technology
-Frontend	React Native (Expo Router), Axios, Context API
-Backend	Spring Boot, Spring Data MongoDB
-Auth	Spring Security (JWT), Role-based access
-Database	MongoDB
-Notifications	Firebase Cloud Messaging, Expo Notifications
-Build Tools	Maven, Gradle (Spring), EAS (Expo)
+Seekers get a list of available tasks and can place bids with their price and proposal.
+They can update their skills, respond faster, and track their accepted tasks.
 
-⚡ Getting Started
-🔹 1. Clone the repository
-git clone https://github.com/<your-username>/snaptask.git
-cd snaptask
+Once a bid is accepted, Seekers update task progress and finally mark it completed with notes and submission proof.
 
-🔹 2. Setup the backend
-cd snaptask-server
-./mvnw spring-boot:run
+Screenshot:
+![Seeker Bidding](screenshots/seekerDashBord.jpg)
+![Seeker Bidding](screenshots/seekerDashBord (2).jpg)
+![Seeker Bidding](screenshots/seekerTaskDetailScreen.jpg)
 
-🔹 3. Setup the client
-cd snaptask-client
-npm install
-npx expo start
+4. Real-Time Notifications (Expo Push + FCM)
 
+The app supports real-time notifications for things like:
 
-⚠️ Make sure to replace your local backend IP in api.js
-Example:
+New bids
 
-const api = axios.create({
-  baseURL: "http://<YOUR_HOST_IP>:4000", // Your local IP and Spring Boot port
-});
+Bid accepted or rejected
 
-🔥 Current Progress
+Task updates
 
-✅ Poster flow APIs (create, update, delete, view)
-✅ Notification service integrated with Expo + Firebase
-✅ Authentication controller + DTOs implemented
-✅ Global exception handling with ProblemDetail
-✅ Frontend API layer setup with Axios and request interceptor
+Account verification
 
-🧰 Upcoming Features
+Deadline alerts
 
-Seeker flow integration (bidding, accepting tasks)
+Expo push + Firebase Cloud Messaging handles all the notification delivery.
+Both background and foreground notifications are supported.
 
-Admin panel for moderation and insights
+The system also stores notifications in MongoDB and shows them in the app.
 
-Chat system for poster–seeker communication
+Screenshot:
+![Notifications](screenshots/notification.jpg)
 
-Analytics dashboard for task performance
+5. Location-Based Features
+
+SnapTask also comes with live-location support.
+Some notifications and certain task recommendations can be based on user location.
+
+Posters can also receive updates about Seekers working nearby.
+
+Location is stored using MongoDB’s GeoJSON structure, which makes distance queries easy and efficient.
+
+Screenshot:
+![Location Features](screenshots/location2.jpg)
+
+6. User Profile Management
+
+Each user has their own profile where they can update:
+
+Name
+
+Email
+
+Skills
+
+Phone number
+
+Profile picture
+
+Role (Poster / Seeker)
+
+Seekers also have performance metrics like success rate, completion count, and response time.
+
+Screenshot:
+![User Profile](screenshots/userProfile.jpg)
+
+7. Completion System
+
+Once a Seeker finishes a task, they submit:
+
+A note
+
+Evidence or work links
+
+Completion timestamp
+
+The Poster then reviews the submission and approves it.
+The whole workflow is stored and tracked in MongoDB using a proper embedded CompletionDetail model.
+
+Screenshot:
+![Completion](screenshots/completion.png)
+
+8. Timeline & Dashboard Summaries
+
+Both Poster and Seeker dashboards have quick summaries:
+
+Active tasks
+
+Pending tasks
+
+Completed tasks
+
+Bids count
+
+Notifications
+
+Task timelines
+
+These summaries are specially designed to load fast and help users understand their activity without navigating too much.
+
+Screenshot:
+![Dashboard](screenshots/logoAndSplashScreen.jpg)
+
+Tech Stack
+
+Frontend
+
+React Native
+
+Expo Router
+
+Context API
+
+Axios with interceptors
+
+Backend
+
+Spring Boot
+
+Spring Security (JWT + RBAC)
+
+Spring Data MongoDB
+
+Firebase FCM
+
+Database
+
+MongoDB with lightweight references
+
+GeoJSON for location
+
+Proper indexes for performance
