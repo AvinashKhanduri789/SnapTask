@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useApi } from '../../../util/useApi';
 import { api } from '../../../util/requester';
 import StatusModal from '../../../components/common/StatusModal';
+import { useAuth } from '../../_layout';
 
 const Notifications = () => {
   const router = useRouter();
@@ -14,6 +15,7 @@ const Notifications = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { userData } = useAuth();
 
   // State for StatusModal
   const [modalConfig, setModalConfig] = useState({
@@ -137,9 +139,9 @@ const Notifications = () => {
     }
   };
 
-  // Format time function
+  
   const formatTime = (timestamp) => {
-    // You might need to adjust this based on your API response format
+    
     if (!timestamp) return 'Recently';
     
     const now = new Date();
@@ -195,8 +197,11 @@ const Notifications = () => {
       >
         <View className="flex-row justify-between items-center">
           <View className="flex-1">
+            <Text className="text-2xl font-bold text-white mb-2">
+              {userData.name || " "}
+            </Text>
             <Text className="text-3xl font-bold text-white mb-2">
-              Notifications
+             Your notifications
             </Text>
             <Text className="text-blue-100 text-base font-medium">
               {notifications.length} unread notifications

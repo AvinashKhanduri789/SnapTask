@@ -21,6 +21,11 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
   const { request, isLoading,error } = useApi();
   const router = useRouter();
 
+
+  const showEditButton = status !== 'COMPLETED';
+  const showDeleteButton = status !== 'PENDING' && status !== 'COMPLETED';
+  const showCompleteButton = status === 'active';
+
   const showModal = (status, title, message, primaryActionLabel = 'OK') => {
     setModalConfig({
       status,
@@ -78,7 +83,7 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
 
   const handleModalPrimaryAction = () => {
     if (modalConfig.status === 'warning' && modalConfig.primaryActionLabel === 'Delete') {
-      // This is the delete confirmation modal
+     
       confirmDelete();
     }
     setModalVisible(false);
@@ -93,67 +98,71 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
       <View className="px-5 py-4 bg-white border-t border-slate-200">
         <View className="flex-row justify-between" style={{ gap: 12 }}>
           
-          {/* Edit Button - Blue */}
-          <TouchableOpacity 
-            className="flex-1"
-            onPress={handleEdit}
-            activeOpacity={0.8}
-            disabled={isLoading}
-          >
-            <LinearGradient
-              colors={['#3B82F6', '#2563EB']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="py-3 rounded-xl items-center justify-center flex-row"
-              style={{
-                shadowColor: '#3B82F6',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                elevation: 3,
-                borderRadius: 12,
-              }}
+         
+          {showEditButton && (
+            <TouchableOpacity 
+              className="flex-1"
+              onPress={handleEdit}
+              activeOpacity={0.8}
+              disabled={isLoading}
             >
-              <Ionicons name="pencil" size={16} color="#ffffff" />
-              <Text className="text-white font-semibold text-sm ml-2">
-                Edit
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={['#3B82F6', '#2563EB']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="py-3 rounded-xl items-center justify-center flex-row"
+                style={{
+                  shadowColor: '#3B82F6',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3,
+                  borderRadius: 12,
+                }}
+              >
+                <Ionicons name="pencil" size={16} color="#ffffff" />
+                <Text className="text-white font-semibold text-sm ml-2">
+                  Edit
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
 
-          {/* Delete Button - Blue Outline */}
-          <TouchableOpacity 
-            className="flex-1"
-            onPress={handleDelete}
-            activeOpacity={0.8}
-            disabled={isLoading}
-          >
-            <View 
-              className="py-3 rounded-xl items-center justify-center flex-row border border-blue-500 bg-white"
-              style={{
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 2,
-                elevation: 2,
-                borderRadius: 12,
-              }}
+         
+          {showDeleteButton && (
+            <TouchableOpacity 
+              className="flex-1"
+              onPress={handleDelete}
+              activeOpacity={0.8}
+              disabled={isLoading}
             >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#3B82F6" />
-              ) : (
-                <>
-                  <Ionicons name="trash-outline" size={16} color="#3B82F6" />
-                  <Text className="text-blue-600 font-semibold text-sm ml-2">
-                    Delete
-                  </Text>
-                </>
-              )}
-            </View>
-          </TouchableOpacity>
+              <View 
+                className="py-3 rounded-xl items-center justify-center flex-row border border-blue-500 bg-white"
+                style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2,
+                  borderRadius: 12,
+                }}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#3B82F6" />
+                ) : (
+                  <>
+                    <Ionicons name="trash-outline" size={16} color="#3B82F6" />
+                    <Text className="text-blue-600 font-semibold text-sm ml-2">
+                      Delete
+                    </Text>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
 
           {/* Complete Button - Blue (conditionally shown) */}
-          {status === 'active' && (
+          {showCompleteButton && (
             <TouchableOpacity 
               className="flex-1"
               onPress={handleComplete}
@@ -181,16 +190,25 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
               </LinearGradient>
             </TouchableOpacity>
           )}
+
+          {/* Placeholder to maintain layout when all buttons are hidden */}
+          {status === 'COMPLETED' && (
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-slate-500 text-sm text-center">
+                Task Completed
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* Status message when complete button is hidden */}
-        {status !== 'active' && (
-          <View className="mt-2">
-            <Text className="text-slate-500 text-xs text-center">
-              Task is {status}
-            </Text>
-          </View>
-        )}
+        {/* Status message */}
+        <View className="mt-2">
+          <Text className="text-slate-500 text-xs text-center">
+            {status === 'PENDING' && 'Task is PENDING - Edit available only'}
+            {status === 'active' && 'Task is ACTIVE - All actions available'}
+            {status === 'COMPLETED' && 'Task is COMPLETED - No actions available'}
+          </Text>
+        </View>
       </View>
 
       <EditTaskBottomSheet
@@ -206,7 +224,7 @@ const ActionButtons = ({ taskId, status, taskData, onTaskUpdate }) => {
         status={modalConfig.status}
         title={modalConfig.title}
         message={modalConfig.message}
-        showCloseButton={modalConfig.status === 'warning'} // Show close button only for warning (delete confirmation)
+        showCloseButton={modalConfig.status === 'warning'} 
         vibration={modalConfig.status === 'error' || modalConfig.status === 'warning'}
         primaryActionLabel={modalConfig.primaryActionLabel}
         onPrimaryAction={handleModalPrimaryAction}

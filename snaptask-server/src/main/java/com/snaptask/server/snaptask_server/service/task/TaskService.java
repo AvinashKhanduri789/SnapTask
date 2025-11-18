@@ -331,17 +331,16 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public ResponseEntity<PosterTaskDetailDto> getPosterTaskDetails(String taskId) {
-        // Fetch task by ID
+
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with ID: " + taskId));
 
-        // Verify poster ownership
         String currentUserId = helper.getCurrentLoggedInUser().getId();
         if (!task.getPosterId().equals(currentUserId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // Fetch all bids for this task
+        // Fetch Bids
         List<Bid> bids = bidRepository.findByTaskId(taskId);
 
         List<PosterBidSummaryDto> bidDtos = bids.stream()
@@ -353,61 +352,51 @@ public class TaskService {
                         .bidAmount(bid.getBidAmount())
                         .message(bid.getProposal())
                         .completedTasks(bid.getCompletedTasks())
-                        .build())
-                .toList();
+                        .build()
+                ).toList();
 
-         AssignedBidInfoDto assignedBidInfo = null;
-        if (task.isAssigned() && task.getAssignedBidId() != null) {
-            Bid assignedBid = bidRepository.findById(task.getAssignedBidId()).orElse(null);
-            if (assignedBid != null) {
-                User seeker = userRepository.findById(task.getAssignedSeekerId()).orElse(null);
-                if (seeker != null) {
-                    assignedBidInfo = AssignedBidInfoDto.builder()
-                            .bidId(assignedBid.getId())
-                            .seekerId(seeker.getId())
-                            .seekerName(seeker.getName())
-                            .seekerRating(seeker.getRating())
-                            .seekerCompletedTasks(seeker.getCompletedTasks())
-                            .seekerBio(seeker.getBio())
-                            .tagline(assignedBid.getTagline())
-                            .bidAmount(assignedBid.getBidAmount())
-                            .proposal(assignedBid.getProposal())
-                            .similarWorks(assignedBid.getSimilarWorks())
-                            .portfolio(assignedBid.getPortfolio().getFirst())
-                            .communicationPreference(assignedBid.getCommunicationPreference())
-                            .communicationDetail(assignedBid.getCommunicationDetail())
-                            .build();
-                }
-            }
+        // Assigned Bid
+        AssignedBidInfoDto assignedBidInfo = null;
+        if (task.getAssignedBidId() != null) {
+            assignedBidInfo = bidRepository.findById(task.getAssignedBidId())
+                    .map(bid -> AssignedBidInfoDto.builder()
+                            .bidId(bid.getId())
+                            .seekerName(bid.getSeekerName())
+                            .tagline(bid.getTagline())
+                            .seekerRating(bid.getRating())
+                            .bidAmount(bid.getBidAmount())
+                            .proposal(bid.getProposal())
+                            .seekerCompletedTasks(bid.getCompletedTasks())
+                            .build()
+                    ).orElse(null);
         }
 
-         TaskCompletionRequest taskCompletionRequest = null;
-        if (task.getCompletionDetail() != null) {
-            taskCompletionRequest = TaskCompletionRequest.builder()
-                    .note(task.getCompletionDetail().getNote())
-                    .submissionLinks(task.getCompletionDetail().getSubmissionLinks())
+        // Completion Request Mapping
+        TaskCompletionRequest completionRequest = null;
+        CompletionDetail cd = task.getCompletionDetail();
+
+        if (cd != null) {
+            completionRequest = TaskCompletionRequest.builder()
+                    .taskId(task.getId())
+                    .note(cd.getNote())
+                    .submissionLinks(cd.getSubmissionLinks())
                     .build();
         }
 
-        PosterTaskDetailDto taskDetailDto = PosterTaskDetailDto.builder()
+        PosterTaskDetailDto response = PosterTaskDetailDto.builder()
                 .id(task.getId())
                 .title(task.getTitle())
                 .description(task.getDescription())
-                .budget(task.getBudget())
                 .category(task.getCategory())
-                .status(task.getStatus())
+                .budget(task.getBudget())
                 .deadline(task.getDeadline())
-                .postedOn(task.getPostedOn())
-                .mode(task.getMode())
-                .bidsCount(task.getBidsCount())
-                .timeline(task.getTimeline())
+                .status(task.getStatus())
                 .bidsList(bidDtos)
-                .createdAt(task.getPostedOn())
                 .assignedBidInfo(assignedBidInfo)
-                .taskCompletionRequest(taskCompletionRequest)
+                .taskCompletionRequest(completionRequest)
                 .build();
 
-        return ResponseEntity.ok(taskDetailDto);
+        return ResponseEntity.ok(response);
     }
 
     @Transactional
@@ -491,8 +480,6 @@ public class TaskService {
     }
 
 
-
-
 //    ----------------------------------------
     @Transactional(readOnly = true)
     public ResponseEntity<?> getSeekerTaskSummery(String category) {
@@ -554,7 +541,7 @@ public class TaskService {
         log.info("Fetching assigned tasks for seeker with ID: {}", seekerId);
 
         // Fetch all tasks assigned to this seeker
-        List<Task> assignedTasks = taskRepository.findByAssignedSeekerIdAndIsAssignedTrue(seekerId);
+        List<Task> assignedTasks = taskRepository.findByAssignedSeekerIdAndIsAssignedTrueAndStatus(seekerId,TaskStatus.PENDING);
         log.info("Found {} assigned tasks for seeker {}", assignedTasks.size(), seekerId);
 
         if (assignedTasks.isEmpty()) {

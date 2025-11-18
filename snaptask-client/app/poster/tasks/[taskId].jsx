@@ -31,9 +31,13 @@ const TaskDetail = () => {
     else console.log("❌ Error fetching task:", result.error);
   };
 
+  useEffect(()=>{
+    console.log("in task detail page task data is-->", taskData);
+  },[taskData]);
+
   const handleTaskUpdate = () => setRefreshTrigger((prev) => prev + 1);
 
-  // --- Loading State ---
+
   if (isLoading)
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -41,7 +45,7 @@ const TaskDetail = () => {
       </SafeAreaView>
     );
 
-  // --- Error State ---
+
   if (error)
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -92,7 +96,7 @@ const TaskDetail = () => {
             <BidsSection bids={taskData.bidsList || []} />
           )}
 
-          {/* ✅ Show only if task not completed */}
+         
           {taskData.status !== "COMPLETED" && taskData.taskCompletionRequest && (
             <CompletionRequestSection
               completion={taskData.taskCompletionRequest}

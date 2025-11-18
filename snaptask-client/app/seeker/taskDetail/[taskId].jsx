@@ -289,9 +289,13 @@ const TaskDetailScreen = () => {
         </ScrollView>
       </SafeAreaView>
        <SafeAreaView style={styles.safeAreaBottom} edges={['bottom']}>
-  <View style={styles.bottomContainer}>
-    {taskData.assignedToMe ? (
-      // 🟢 Assigned to current seeker → show "Mark as Completed"
+    <View style={styles.bottomContainer}>
+
+  
+  {taskData.status?.toLowerCase() === "completed" ? null : (
+
+    taskData.assignedToMe ? (
+      
       <TouchableOpacity
         onPress={() => setShowCompletionSheet(true)}
         activeOpacity={0.85}
@@ -300,14 +304,8 @@ const TaskDetailScreen = () => {
         <Ionicons name="checkmark-done" size={scaleFont(18)} color="#fff" />
         <Text style={styles.bottomButtonText}>Mark as Completed</Text>
       </TouchableOpacity>
-    ) : taskData.alredyMadebid ? (
-      // 🟡 Made bid but not assigned yet → disable
-      <View style={[styles.bottomButton, styles.disabledButton]}>
-        <Ionicons name="checkmark-circle" size={scaleFont(18)} color="#fff" />
-        <Text style={styles.bottomButtonText}>Bid Already Submitted</Text>
-      </View>
-    ) : (
-      // 🔵 No bid made yet → show bid button
+    ) : !taskData.alredyMadebid ? (
+      // 🔵 No bid yet → show bid button
       <TouchableOpacity
         onPress={() => router.push(`/seeker/biddigrequest/${taskData.id}`)}
         activeOpacity={0.85}
@@ -316,8 +314,11 @@ const TaskDetailScreen = () => {
         <Ionicons name="send" size={scaleFont(18)} color="#fff" />
         <Text style={styles.bottomButtonText}>Make Bidding Request</Text>
       </TouchableOpacity>
-    )}
-  </View>
+    ) : null // 🟡 Bid already submitted → show nothing
+  )}
+
+</View>
+
 
   {/* Completion Request Modal */}
   <Modal

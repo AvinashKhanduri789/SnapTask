@@ -19,14 +19,14 @@ const useLocation = () => {
       const response = await request(api.put("/common/location", locationData));
 
       if (response.ok) {
-        console.log("✅ Location updated successfully on server");
+        console.log("Location updated successfully on server");
         return true;
       } else {
-        console.warn("⚠️ Failed to update location on server:", response.error);
+        console.warn(" Failed to update location on server:", response.error);
         return false;
       }
     } catch (err) {
-      console.warn("⚠️ Error updating location on server");
+      console.warn(" Error updating location on server");
       return false;
     }
   };
@@ -49,7 +49,7 @@ const useLocation = () => {
       }
       return "Address not available";
     } catch {
-      console.warn("⚠️ Unable to fetch address");
+      console.warn(" Unable to fetch address");
       return "Address not available";
     }
   };
@@ -70,16 +70,16 @@ const useLocation = () => {
         const { latitude, longitude } = coords;
         setLatitude(latitude);
         setLongitude(longitude);
-        console.log("📍 Lat and Long:", latitude, longitude);
+        console.log(" Lat and Long:", latitude, longitude);
 
         const userAddress = await getAddressFromCoords(latitude, longitude);
         setAddress(userAddress);
-        console.log("📍 User Address:", userAddress);
+        console.log(" User Address:", userAddress);
 
         if (shouldUpdateServer) {
           const updateSuccess = await updateLocationOnServer(latitude, longitude, userAddress);
           if (!updateSuccess) {
-            console.warn("⚠️ Location was fetched but failed to update on server");
+            console.warn("Location was fetched but failed to update on server");
           }
         }
 
@@ -88,7 +88,7 @@ const useLocation = () => {
       return null;
     } catch (error) {
       setErrorMsg(error.message);
-      console.warn("⚠️ Unable to fetch location");
+      console.warn(" Unable to fetch location");
       return null;
     } finally {
       setIsLocationLoading(false);

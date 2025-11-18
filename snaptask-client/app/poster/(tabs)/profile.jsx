@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ProfileInfo from '../../../components/poster/profile/ProfileInfo';
 import AccountSettings from '../../../components/poster/profile/AccountSettings';
 import ActionButtons from '../../../components/poster/profile/ActionButtons';
+import StatusModal from '../../../components/common/StatusModal'; // Import StatusModal
 import { useAuth } from '../../_layout';
 import { useApi } from "../../../util/useApi";
 import { api } from "../../../util/requester";
@@ -31,6 +32,9 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+ 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const userRole = userData?.role;
   const profileEndpointPrefix = userRole === "POSTER" ? "poster" : "seeker";
@@ -54,6 +58,10 @@ const ProfileScreen = () => {
     await loadProfileData();
     setRefreshing(false);
   };
+
+  useEffect(()=>{
+    console.log("profile data on profile screen is -->", profileData);
+  },[profileData]);
 
   const handleSave = async () => {
     if (!profileData) return;
@@ -99,13 +107,27 @@ const ProfileScreen = () => {
     });
   }, []);
 
+  // Handle logout confirmation
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    logout();
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
   // Loading State
   if (isLoading && !profileData) {
     return (
       <View className="flex-1 bg-slate-50">
         <StatusBar backgroundColor="#6366F1" barStyle="light-content" translucent />
         <View className="relative">
-          {/* Original Gradient Background with curved bottom */}
+         
           <LinearGradient
             colors={['#6366F1', '#3B82F6', '#60A5FA']}
             start={{ x: 0, y: 0 }}
@@ -134,7 +156,7 @@ const ProfileScreen = () => {
             </SafeAreaView>
           </LinearGradient>
           
-          {/* Original Curved Bottom Overlay */}
+
           <View 
             style={{
               position: 'absolute',
@@ -348,7 +370,7 @@ const ProfileScreen = () => {
             profileData={profileData}
             isEditing={isEditing}
             updateProfileData={updateProfileData}
-            categories={categories} // Pass categories to ProfileInfo
+            categories={categories} 
           />
           <AccountSettings profileData={profileData} />
           <ActionButtons
@@ -356,11 +378,24 @@ const ProfileScreen = () => {
             onEdit={() => setIsEditing(true)}
             onSave={handleSave}
             onCancel={handleCancel}
-            onLogout={logout}
+            onLogout={handleLogoutClick} 
             isSaving={isSaving}
           />
         </View>
       </ScrollView>
+
+      {/* Logout Confirmation Modal */}
+      <StatusModal
+        visible={showLogoutModal}
+        onClose={handleLogoutCancel}
+        status="warning"
+        title="Confirm Logout"
+        message="Are you sure you want to logout? You'll need to sign in again to access your account."
+        showCloseButton={true}
+        vibration={true}
+        primaryActionLabel="Logout"
+        onPrimaryAction={handleLogoutConfirm}
+      />
 
       {/* Saving Overlay */}
       {isSaving && (

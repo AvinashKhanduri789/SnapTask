@@ -103,7 +103,7 @@ const handleVerify = async () => {
 
     await AsyncStorage.removeItem("pendingVerificationEmail");
 
-    // Navigate only after alert, not before
+  
     setTimeout(() => router.replace("/auth/login"), 300);
   } catch (err) {
     const msg =
@@ -114,7 +114,7 @@ const handleVerify = async () => {
 
     Alert.alert("Verification Failed", msg);
   } finally {
-    // 🔥 Always reset loading here
+    
     if (mounted.current) setIsLoading(false);
   }
 };
@@ -138,16 +138,13 @@ const handleVerify = async () => {
 
     if (!ok) throw error;
 
-    // ✅ Optional: show success message once
-    Alert.alert(
-      data?.title || "Verification Email Sent",
-      data?.detail || "A new verification code has been sent to your email."
-    );
+    
+    
 
-    // ✅ Restart timer only if successful
+   
     setResendTimer(30);
   } catch (err) {
-    // console.error("❌ Resend failed:", err);
+    
     const msg =
       err?.response?.data?.detail ||
       err?.detail ||

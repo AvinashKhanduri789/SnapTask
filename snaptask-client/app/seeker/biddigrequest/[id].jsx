@@ -59,7 +59,7 @@ const MakeBidScreen = () => {
       ...prev,
       [field]: value,
     }));
-    // Clear validation error when user starts typing
+    
     if (validationErrors[field]) {
       setValidationErrors(prev => ({
         ...prev,

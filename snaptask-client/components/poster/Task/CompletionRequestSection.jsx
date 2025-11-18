@@ -20,7 +20,7 @@ const CompletionRequestSection = ({ completion, taskId, onApproved }) => {
   if (!completion) return null;
 
   const handleApprove = async () => {
-    setConfirmVisible(false); // close confirmation modal first
+    setConfirmVisible(false);
     const response = await request(api.post(`/poster/${taskId}/approve_completion`));
 
     if (response.ok) {
@@ -31,7 +31,7 @@ const CompletionRequestSection = ({ completion, taskId, onApproved }) => {
         message: "You’ve successfully approved this completion request.",
       });
 
-      if (onApproved) onApproved(); // optional refresh callback
+      if (onApproved) onApproved(); 
     } else {
       const { error } = response;
       setModalConfig({
@@ -144,7 +144,7 @@ const CompletionRequestSection = ({ completion, taskId, onApproved }) => {
         )}
       </TouchableOpacity>
 
-      {/* ✅ Confirmation Modal */}
+      {/* Confirmation Modal */}
       <StatusModal
         visible={confirmVisible}
         status="warning"
@@ -154,11 +154,11 @@ const CompletionRequestSection = ({ completion, taskId, onApproved }) => {
         onPrimaryAction={handleApprove}
         secondaryActionLabel="Cancel"
         onSecondaryAction={handleCancel}
-        onClose={handleCancel} // <-- FIX: define onClose to prevent error
+        onClose={handleCancel} 
         showCloseButton={true}
       />
 
-      {/* ✅ Result Modal */}
+      {/*  Result Modal */}
       <StatusModal
         visible={modalConfig.visible}
         status={modalConfig.status}

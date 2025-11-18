@@ -4,7 +4,7 @@
     "slug": "HelpHive_client",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/download.jpg",
+    "icon": "./assets/images/HelpHive.png",
     "scheme": "helphiveclient",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -19,9 +19,9 @@
       "windowSoftInputMode": "adjustResize",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/download.jpg",
-        "backgroundImage": "./assets/images/download.jpg",
-        "monochromeImage": "./assets/images/download.jpg",
+        "foregroundImage": "./assets/images/HelpHive.png",
+        "backgroundImage": "./assets/images/HelpHive.png",
+        "monochromeImage": "./assets/images/HelpHive.png",
       },
       "googleServicesFile":"./app/google-services.json",
       "edgeToEdgeEnabled": true,
@@ -30,7 +30,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/download.jpg",
+      "favicon": "./assets/images/HelpHive.png",
       "bundler": "metro"
     },
     "plugins": [
@@ -45,7 +45,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/download.jpg",
+          "image": "./assets/images/HelpHive.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

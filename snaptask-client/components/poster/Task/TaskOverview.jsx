@@ -16,19 +16,42 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
 
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const text = days > 0 ? `${days} day${days !== 1 ? 's' : ''} left` : `${hours} hour${hours !== 1 ? 's' : ''} left`;
-    return { text, color: days <= 0 && hours <= 6 ? '#EF4444' : '#F59E0B' };
+    
+    if (days > 0) {
+      return { 
+        text: `${days} day${days !== 1 ? 's' : ''} left`, 
+        color: days <= 1 ? '#F59E0B' : '#10B981'
+      };
+    } else {
+      return { 
+        text: `${hours} hour${hours !== 1 ? 's' : ''} left`, 
+        color: hours <= 6 ? '#EF4444' : '#F59E0B'
+      };
+    }
   };
 
   const calculateProgress = () => {
-    const start = new Date(postedOn);
-    const end = new Date(deadline);
     const now = new Date();
-    const total = end - start;
-    const elapsed = now - start;
-    if (elapsed <= 0) return 0;
-    if (elapsed >= total) return 100;
+    const deadlineDate = new Date(deadline);
+    
+    
+    const startDate = postedOn ? new Date(postedOn) : new Date();
+    
+    const total = deadlineDate - startDate;
+    const elapsed = now - startDate;
+    
+    if (total <= 0) return 100; // Deadline already passed
+    if (elapsed <= 0) return 0; // Task not started yet
+    if (elapsed >= total) return 100; // Deadline passed
+    
     return Math.round((elapsed / total) * 100);
+  };
+
+  const getProgressBarColors = (progress) => {
+    if (progress >= 100) return ['#EF4444', '#DC2626']; 
+    if (progress >= 80) return ['#F59E0B', '#D97706']; 
+    if (progress >= 50) return ['#3B82F6', '#2563EB']; 
+    return ['#10B981', '#059669'];
   };
 
   const gradients = {
@@ -55,6 +78,7 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
 
   const timeRemaining = calculateTimeRemaining();
   const progress = calculateProgress();
+  const progressBarColors = getProgressBarColors(progress);
 
   return (
     <View
@@ -157,7 +181,9 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280' }}>Posted On</Text>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#1f2937' }}>{formatDate(postedOn)}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#1f2937' }}>
+                {postedOn ? formatDate(postedOn) : 'Recently'}
+              </Text>
             </View>
             <View style={{ flex: 1, alignItems: 'flex-end' }}>
               <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280' }}>Deadline</Text>
@@ -175,7 +201,7 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
             </View>
             <View style={{ height: 6, backgroundColor: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
               <LinearGradient
-                colors={progress >= 100 ? ['#EF4444', '#DC2626'] : ['#F59E0B', '#D97706']}
+                colors={progressBarColors}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{

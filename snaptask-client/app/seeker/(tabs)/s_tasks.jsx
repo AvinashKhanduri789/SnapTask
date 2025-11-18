@@ -24,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApi } from '../../../util/useApi';
 import { api } from '../../../util/requester';
+import { useAuth } from '../../_layout';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -33,15 +34,16 @@ export default function SeekerTasksScreen() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [customCategory, setCustomCategory] = useState('');
-
+  const { userData } = useAuth();
+  console.log(userData);
   const { request, data, isLoading, error } = useApi();
 
-  // Separate states for different task types
+ 
   const [newTaskData, setNewTaskData] = useState([]);
   const [pendingTaskData, setPendingTaskData] = useState([]);
   const [completedTaskData, setCompletedTaskData] = useState([]);
 
-  // Separate loading and error states for each tab
+
   const [newTasksLoading, setNewTasksLoading] = useState(false);
   const [newTasksError, setNewTasksError] = useState(null);
   const [pendingTasksLoading, setPendingTasksLoading] = useState(false);
@@ -66,7 +68,7 @@ export default function SeekerTasksScreen() {
     { id: 'completed', label: 'Completed' },
   ];
 
-  // Fetch tasks when component mounts or category/tab changes
+  
   useEffect(() => {
     if (activeTab === 'new') {
       fetchNewTasks();
@@ -77,7 +79,7 @@ export default function SeekerTasksScreen() {
     }
   }, [activeTab, selectedCategory]);
 
-  // Function to fetch new tasks based on selected category
+  
   const fetchNewTasks = async () => {
     setNewTasksLoading(true);
     setNewTasksError(null);
@@ -102,7 +104,7 @@ export default function SeekerTasksScreen() {
     setNewTasksLoading(false);
   };
 
-  // Function to fetch pending tasks
+  
   const fetchPendingTasks = async () => {
     setPendingTasksLoading(true);
     setPendingTasksError(null);
@@ -119,7 +121,7 @@ export default function SeekerTasksScreen() {
     setPendingTasksLoading(false);
   };
 
-  // Function to fetch completed tasks
+  
   const fetchCompletedTasks = async () => {
     setCompletedTasksLoading(true);
     setCompletedTasksError(null);
@@ -136,7 +138,7 @@ export default function SeekerTasksScreen() {
     setCompletedTasksLoading(false);
   };
 
-  // Function to get current tasks based on active tab
+  
   const getCurrentTasks = () => {
     switch (activeTab) {
       case 'new':
@@ -150,7 +152,7 @@ export default function SeekerTasksScreen() {
     }
   };
 
-  // Function to get loading state based on active tab
+  
   const getCurrentLoadingState = () => {
     switch (activeTab) {
       case 'new':
@@ -164,7 +166,7 @@ export default function SeekerTasksScreen() {
     }
   };
 
-  // Function to get error state based on active tab
+ 
   const getCurrentErrorState = () => {
     switch (activeTab) {
       case 'new':
@@ -178,7 +180,7 @@ export default function SeekerTasksScreen() {
     }
   };
 
-  // Function to check if we have empty data (no tasks) vs error
+ 
   const hasNoTasks = () => {
     return !getCurrentLoadingState() && !getCurrentErrorState() && getCurrentTasks().length === 0;
   };
@@ -209,12 +211,12 @@ export default function SeekerTasksScreen() {
     Keyboard.dismiss();
   };
 
-  // Handle tab change
+  
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
   };
 
-  // Function to retry fetching based on current tab
+  
   const handleRetry = () => {
     if (activeTab === 'new') {
       fetchNewTasks();
@@ -234,11 +236,11 @@ export default function SeekerTasksScreen() {
     <View style={styles.container}>
       {/* StatusBar with blue background */}
       <StatusBar translucent backgroundColor="#3B82F6" barStyle="light-content" />
-      
+
       {/* Main content */}
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
         <View style={styles.content}>
-          {/* Header built directly into the component */}
+         
           <LinearGradient
             colors={['#3B82F6', '#3B82F6']}
             start={{ x: 0, y: 0 }}
@@ -246,12 +248,21 @@ export default function SeekerTasksScreen() {
             style={styles.headerContainer}
           >
             <View style={styles.headerRow}>
-              <View>
+              <View style={{ marginBottom: 12 }}>
+                <View className="flex-row items-baseline">
+                  <Text className="text-white font-bold text-xl">
+                    {userData.name || " "}
+                  </Text>
+                </View>
+
                 <Text style={styles.headerTitle}>Your Tasks</Text>
+
                 <Text style={styles.headerSubtitle}>
                   Find new tasks or manage your current ones
                 </Text>
               </View>
+
+
             </View>
           </LinearGradient>
 

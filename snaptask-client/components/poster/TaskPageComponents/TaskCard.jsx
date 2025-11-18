@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { formatDate } from '../../../util/helper'; // Make sure you have this helper
+import { formatDate } from '../../../util/helper';
 
 const TaskCard = ({ task, type }) => {
   const router = useRouter();

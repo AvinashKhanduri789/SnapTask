@@ -5,11 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import QuickActionCard from '../../../components/poster/home/QuickActionCard ';
 import TaskTabs from '../../../components/poster/home/TaskTabs ';
 import TaskList from '../../../components/poster/home/TaskList ';
-import InsightsCard from '../../../components/poster/home/InsightsCard ';
 import { useState, useEffect } from 'react';
 import { useApi } from '../../../util/useApi';
 import { api } from "../../../util/requester";
-
+import { useAuth } from '../../_layout';
 const { width } = Dimensions.get('window');
 
 const Home = () => {
@@ -17,6 +16,7 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const { userData } = useAuth();
 
   const { request, data, isLoading, error } = useApi();
 
@@ -28,7 +28,7 @@ const Home = () => {
     return request(api.get("/poster/tasks/summary"));
   };
 
-  // ✅ Provide safe defaults
+
   const tasksData = data || { active: [], pending: [], completed: [] };
 
   const onRefresh = async () => {
@@ -53,19 +53,18 @@ const Home = () => {
   return (
     <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       <StatusBar backgroundColor="#3B82F6" barStyle="light-content" />
-      
-      {/* Header Section Built Directly */}
+
+   
       <LinearGradient
         colors={['#3B82F6', '#3B82F6']}
-        className="pt-16 pb-8 px-6"
-        style={{ 
+        className="pt-8 pb-8 px-6"
+        style={{
           borderBottomLeftRadius: 54,
           borderBottomRightRadius: 54,
           marginBottom: 15,
         }}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-          {/* Left Greeting */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, paddingTop: 5 }}>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <View style={{
@@ -80,7 +79,7 @@ const Home = () => {
                 borderColor: 'rgba(255,255,255,0.3)',
               }}>
                 <Text style={{ fontSize: 20, fontWeight: '800', color: '#ffffff' }}>
-                  A
+                  {userData.name[0] || " "}
                 </Text>
               </View>
               <View>
@@ -90,37 +89,13 @@ const Home = () => {
                   color: '#ffffff',
                   letterSpacing: -0.5,
                 }}>
-                  Aviansh! 
+                  {userData.name || " "}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Notification Icon */}
-          <TouchableOpacity style={{
-            position: 'relative',
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            backgroundColor: 'rgba(255,255,255,0.15)',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1.5,
-            borderColor: 'rgba(255,255,255,0.3)',
-          }}>
-            <Ionicons name="notifications-outline" size={24} color="#ffffff" />
-            <View style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              backgroundColor: '#ef4444',
-              width: 10,
-              height: 10,
-              borderRadius: 5,
-              borderWidth: 2,
-              borderColor: 'rgba(255,255,255,0.3)',
-            }} />
-          </TouchableOpacity>
+         
         </View>
 
         {/* Search Bar */}
@@ -150,16 +125,21 @@ const Home = () => {
           }}>
             <Ionicons name="search" size={20} color="#ffffff" />
           </View>
-          
-          <View style={{ flex: 1 }}>
+
+          <View style={{
+            flex: 1,
+            justifyContent: 'center', // Add this to center the text vertically
+          }}>
             <TextInput
               style={{
                 fontSize: 16,
                 fontWeight: '600',
                 color: '#1f2937',
                 height: 40,
+                padding: 0, // Remove default padding
+                textAlignVertical: 'center', // Center text vertically
               }}
-              placeholder="Search tasks, seekers, or categories..."
+              placeholder="Search your tasks"
               placeholderTextColor="#9ca3af"
               value={searchQuery}
               onChangeText={handleSearch}
@@ -170,7 +150,7 @@ const Home = () => {
               autoCapitalize="none"
             />
           </View>
-          
+
           {searchQuery ? (
             <TouchableOpacity
               onPress={clearSearch}
@@ -218,9 +198,9 @@ const Home = () => {
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             colors={['#3B82F6']}
             tintColor="#3B82F6"
           />
@@ -228,7 +208,7 @@ const Home = () => {
       >
         <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
           {/* <QuickActionCard /> */}
-          
+
           <TaskTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -243,7 +223,7 @@ const Home = () => {
             userData={tasksData}
           />
 
-          <InsightsCard />
+          
         </View>
       </ScrollView>
     </View>

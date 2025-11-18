@@ -25,7 +25,6 @@ import { useApi } from "../../util/useApi"
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState('');
   const buttonScale = new Animated.Value(1);
@@ -57,12 +56,12 @@ const Login = () => {
         return;
       }
 
-      // 2️⃣ Extract user info + token
-      const user = response.data; // should contain { email, username, role, token }
-      // 3️⃣ Save to AsyncStorage
+
+      const user = response.data; 
+     
       await AsyncStorage.setItem("userData", JSON.stringify(user));
 
-      // 4️⃣ Update global auth context
+     
       setUserData(user);
 
     } catch (err) {
@@ -369,6 +368,42 @@ const Login = () => {
               <Ionicons name="person-add-outline" size={22} color="#6366F1" />
               <Text style={{ marginLeft: 12, color: '#6366F1', fontSize: 17, fontWeight: '700', letterSpacing: -0.2 }}>
                 Create New Account
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+           <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <TouchableOpacity
+              onPressIn={() => animatePress(buttonScale)}
+              onPressOut={() => animateRelease(buttonScale)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push("/auth/validateAccount");
+              }}
+              activeOpacity={0.9}
+              style={{
+                borderRadius: 16,
+                paddingVertical: 18,
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                backgroundColor: '#ffffff',
+                borderWidth: 2,
+                borderColor: '#e5e7eb',
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 4,
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 4,
+                marginTop:8
+              }}
+            >
+              <Ionicons name="shield-checkmark-outline" size={22} color="#6366F1" />
+              <Text style={{ marginLeft: 12, color: '#6366F1', fontSize: 17, fontWeight: '700', letterSpacing: -0.2 }}>
+                Validate Account
               </Text>
             </TouchableOpacity>
           </Animated.View>

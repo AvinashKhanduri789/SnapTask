@@ -10,7 +10,7 @@ const Header = () => {
 
   return (
     <LinearGradient
-      colors={['#3B82F6', '#3B82F6']} // Changed to solid blue to match
+      colors={['#3B82F6', '#3B82F6']} 
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.container}
@@ -22,9 +22,7 @@ const Header = () => {
             Find new tasks or manage your current ones
           </Text>
         </View>
-        {/* <TouchableOpacity style={styles.filterButton} onPress={handleFilterPress}>
-          <Ionicons name="filter" size={20} color="#1E3A8A" />
-        </TouchableOpacity> */}
+        
       </View>
     </LinearGradient>
   );
@@ -38,7 +36,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 54,
     borderBottomRightRadius: 54,
     marginBottom: 15,
-    // Remove any margins that might create gaps
     marginTop: 0,
   },
   row: {

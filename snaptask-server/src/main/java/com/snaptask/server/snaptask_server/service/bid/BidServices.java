@@ -49,7 +49,6 @@ public class BidServices {
         this.notificationRepository = notificationRepository;
     }
 
-
     @Transactional(readOnly = true)
     public ResponseEntity<?> getBidDetail(String id) {
 
@@ -62,45 +61,57 @@ public class BidServices {
 
         Bid bid = bidOpt.get();
 
-
         Optional<User> seekerOpt = userRepository.findById(bid.getSeekerId());
-        User seeker = seekerOpt.orElse(null); // safe fallback
-
+        User seeker = seekerOpt.orElse(null);
 
         PosterBidDetailDto dto = PosterBidDetailDto.builder()
                 .id(bid.getId())
                 .taskId(bid.getTaskId())
-                .seekerName(nonNull(bid.getSeekerName(), seeker != null ? seeker.getName() : "Unknown"))
+                .seekerName(nonNull(bid.getSeekerName(),
+                        seeker != null ? seeker.getName() : "Unknown"))
                 .tagline(nonNull(bid.getTagline(), ""))
-                .bio(nonNull(bid.getBio(), seeker != null ? seeker.getBio() : ""))
+                .bio(nonNull(bid.getBio(),
+                        seeker != null ? seeker.getBio() : ""))
                 .rating(String.valueOf(bid.getRating()))
                 .completedTasks(String.valueOf(bid.getCompletedTasks()))
                 .bidAmount(String.valueOf(bid.getBidAmount()))
-                .timeline(nonNull(bid.getSuccessRate(), "Not specified"))
+
+                // FIXED: timeline should not use successRate
+                .timeline("Not specified")
+
                 .proposal(nonNull(bid.getProposal(), ""))
-                .similarWorkLinks(bid.getSimilarWorks() != null ? bid.getSimilarWorks() : List.of())
+                .similarWorkLinks(
+                        bid.getSimilarWorks() != null ? bid.getSimilarWorks() : List.of()
+                )
                 .canCompleteInTime(String.valueOf(bid.isCanCompleteInTime()))
                 .communicationPreference(nonNull(bid.getCommunicationPreference(), "Not specified"))
                 .communicationDetail(nonNull(bid.getCommunicationDetail(), ""))
                 .bidStatus(bid.getBidStatus() != null ? bid.getBidStatus().name() : "PENDING")
-                .portfolio(nonNull(bid.getPortfolio().getFirst(), ""))
-                .responseTime(nonNull(bid.getResponseTime(),
-                        seeker != null && seeker.getBio() != null ? seeker.getBio() : "N/A"))
+
+                // FIXED: ArrayList does not have getFirst()
+                .portfolio(firstOrEmpty(bid.getPortfolio()))
+
+
+
                 .memberSince(nonNull(bid.getMemberSince(),
                         seeker != null && seeker.getJoinDate() != null
                                 ? seeker.getJoinDate().getMonth() + " " + seeker.getJoinDate().getYear()
                                 : "N/A"))
+
                 .build();
 
-
         return ResponseEntity.ok(dto);
+    }
+
+
+    private String firstOrEmpty(List<String> list) {
+        return (list != null && !list.isEmpty()) ? list.get(0) : "";
     }
 
 
     private String nonNull(String value, String fallback) {
         return (value != null && !value.isBlank()) ? value : fallback;
     }
-
 
     @Transactional
     public ResponseEntity<?> acceptBid(String bidId) {

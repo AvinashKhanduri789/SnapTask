@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Alert, Text, StatusBar, TouchableOpacity, Animated } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import TabSwitcher from "../../../components/poster/TaskPageComponents/TabSwitcher";
-import PendingTasks from "../../../components/poster/TaskPageComponents/PendingTasks";
-import CompletedTasks from "../../../components/poster/TaskPageComponents/CompletedTasks";
-import NewTaskBottomSheet from "../../../components/poster/TaskPageComponents/NewTaskBottomSheet";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from 'expo-router'; // Import useRouter
+import { useEffect, useState } from "react";
+import { Alert, Animated, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import StatusModal from "../../../components/common/StatusModal";
+import CompletedTasks from "../../../components/poster/TaskPageComponents/CompletedTasks";
+import PendingTasks from "../../../components/poster/TaskPageComponents/PendingTasks";
+import TabSwitcher from "../../../components/poster/TaskPageComponents/TabSwitcher";
 import { api } from "../../../util/requester";
 import { useApi } from "../../../util/useApi";
 
 const Tasks = () => {
   const [activeTab, setActiveTab] = useState("pending");
-  const [showBottomSheet, setShowBottomSheet] = useState(false);
   const [statusVisible, setStatusVisible] = useState(false);
   const [statusData, setStatusData] = useState({
     title: "",
@@ -30,6 +29,7 @@ const Tasks = () => {
   const [slideAnim] = useState(new Animated.Value(30));
 
   const { request, isLoading } = useApi();
+  const router = useRouter(); // Initialize router
 
   // Animation effect
   useEffect(() => {
@@ -47,7 +47,7 @@ const Tasks = () => {
     ]).start();
   }, []);
 
-  // 🔹 Fetch tasks on mount
+  
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -64,7 +64,7 @@ const Tasks = () => {
     loadData();
   }, []);
 
-  // 🔹 Combine active + pending safely
+ 
   useEffect(() => {
     if (taskData) {
       setActiveTaskData([
@@ -74,30 +74,38 @@ const Tasks = () => {
     }
   }, [taskData]);
 
-  // 🔹 Tab change handler
+
   const handleTabChange = (tabId) => {
     if (tabId === "new") {
-      setShowBottomSheet(true);
+    
+      router.push('/poster/tasks/NewTaskPage');
     } else {
       setActiveTab(tabId);
     }
   };
 
-  // 🔹 Close bottom sheet
-  const handleCloseBottomSheet = () => {
-    setShowBottomSheet(false);
-    setActiveTab("pending");
-  };
 
-  // 🔹 Handle new task created
   const handleTaskCreated = (status) => {
-    setShowBottomSheet(false);
     setStatusData(status);
     setStatusVisible(true);
     setActiveTab("pending");
+    
+    
+    refreshTaskData();
   };
 
-  // 🔹 Render main content based on tab
+
+  const refreshTaskData = async () => {
+    try {
+      const result = await request(api.get("/poster/tasks/summary"));
+      if (result.ok && result.data) {
+        setTaskData(result.data);
+      }
+    } catch (error) {
+      console.error("Task refresh error:", error);
+    }
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -125,7 +133,7 @@ const Tasks = () => {
     }
   };
 
-  // Calculate task counts
+
   const pendingCount = taskData.pending?.length || 0;
   const activeCount = taskData.active?.length || 0;
   const completedCount = taskData.completed?.length || 0;
@@ -151,19 +159,10 @@ const Tasks = () => {
                 <Text style={styles.headerSubtitle}>Task Management</Text>
               </Animated.View>
 
-              {/* 🔹 Refresh Button (Silent Refresh) */}
+              
               <TouchableOpacity
                 style={styles.refreshButton}
-                onPress={async () => {
-                  try {
-                    const result = await request(api.get("/poster/tasks/summary"));
-                    if (result.ok && result.data) {
-                      setTaskData(result.data);
-                    }
-                  } catch (error) {
-                    Alert.alert("Error", "Failed to refresh data");
-                  }
-                }}
+                onPress={refreshTaskData}
               >
                 <Ionicons name="refresh-outline" size={26} color="#fff" />
               </TouchableOpacity>
@@ -178,15 +177,15 @@ const Tasks = () => {
                 alignItems: "center",
               }}
             >
-              <View style={[styles.statItem, styles.pendingStat]}>
+              <View style={[styles.statItem, styles.pendingStat]} className = " pb-8">
                 <View style={[styles.statDot, { backgroundColor: "#F59E0B" }]} />
                 <Text style={styles.statText}>{pendingCount} Pending</Text>
               </View>
-              <View style={[styles.statItem, styles.activeStat]}>
-                <View style={[styles.statDot, { backgroundColor: "#3B82F6" }]} />
+              <View style={[styles.statItem, styles.activeStat]} className = " pb-8">
+                <View style={[styles.statDot, { backgroundColor: "#3B82F6" }]}   />
                 <Text style={styles.statText}>{activeCount} In Progress</Text>
               </View>
-              <View style={[styles.statItem, styles.completedStat]}>
+              <View style={[styles.statItem, styles.completedStat]} className = " pb-8">
                 <View style={[styles.statDot, { backgroundColor: "#10B981" }]} />
                 <Text style={styles.statText}>{completedCount} Completed</Text>
               </View>
@@ -195,8 +194,6 @@ const Tasks = () => {
         </SafeAreaView>
       </LinearGradient>
 
-
-
       {/* Tab Switcher */}
       <TabSwitcher activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -204,13 +201,6 @@ const Tasks = () => {
       <View style={styles.content}>
         {renderContent()}
       </View>
-
-      {/* New Task Form Sheet */}
-      <NewTaskBottomSheet
-        visible={showBottomSheet}
-        onClose={handleCloseBottomSheet}
-        onTaskCreated={handleTaskCreated}
-      />
 
       {/* Status Modal */}
       <StatusModal
@@ -284,14 +274,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-
   refreshButton: {
     backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 12,
     padding: 6,
   },
-
-
 });
 
 export default Tasks;

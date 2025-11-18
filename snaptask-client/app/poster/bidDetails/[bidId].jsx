@@ -15,7 +15,7 @@ const BidDetailScreen = () => {
   const { bidId } = useLocalSearchParams();
   const { request, isLoading, error } = useApi();
 
-  // State for StatusModal
+ 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalConfig, setModalConfig] = useState({
     status: '',
@@ -31,7 +31,7 @@ const BidDetailScreen = () => {
   const [bidData, setBidData] = useState(null);
   const [currentBidStatus, setCurrentBidStatus] = useState('pending');
 
-  // Fetch bid details on component mount
+  
   useEffect(() => {
     fetchBidDetails();
     console.log('Bid ID:', bidId);
@@ -53,7 +53,6 @@ const BidDetailScreen = () => {
     }
   };
 
-  // Consistent error handler
   const handleApiError = (error) => {
     console.log('API Error:', error);
     
@@ -123,21 +122,21 @@ const BidDetailScreen = () => {
 
     setModalConfig({
       ...actionConfig[action],
-      action: action // Store the action for later use
+      action: action 
     });
     setModalVisible(true);
   };
 
   const handleModalClose = () => {
     setModalVisible(false);
-    // Reset action state when modal closes
+
     setIsAccepting(false);
     setIsRejecting(false);
   };
 
   const handleModalPrimaryAction = () => {
     if (modalConfig.status === 'confirm') {
-      // Execute the confirmed action
+     
       if (modalConfig.action === 'accept') {
         handleAcceptBidConfirmed();
       } else if (modalConfig.action === 'reject') {
@@ -175,7 +174,7 @@ const BidDetailScreen = () => {
           'Bid Accepted!', 
           `You have accepted ${bidData.seekerName}'s bid.`
         );
-        // Refresh bid data to get updated status
+        
         fetchBidDetails();
       } else {
         handleApiError(response.error);
@@ -201,7 +200,7 @@ const BidDetailScreen = () => {
           'Bid Rejected!', 
           `You have rejected ${bidData.seekerName}'s bid.`
         );
-        // Refresh bid data to get updated status
+      
         fetchBidDetails();
       } else {
         handleApiError(response.error);
@@ -215,7 +214,7 @@ const BidDetailScreen = () => {
   };
 
   const handleOpenLink = async (url) => {
-    // Ensure URL has proper protocol
+
     const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
     
     const supported = await Linking.canOpenURL(formattedUrl);
@@ -271,10 +270,10 @@ const BidDetailScreen = () => {
 
   const completionStatus = getCompletionStatus();
 
-  // Check if any action is in progress
+ 
   const isActionInProgress = isAccepting || isRejecting || isLoading;
 
-  // Render loading state within the same layout
+
   const renderContent = () => {
     if (isLoading && !bidData) {
       return (
@@ -523,10 +522,10 @@ const BidDetailScreen = () => {
         </View>
       </View>
 
-      {/* Content area - shows loading/error/data */}
+    
       {renderContent()}
 
-      {/* Action Buttons - Only show when we have data */}
+     
       {bidData && (
         <View className="bg-white border-t border-slate-200 px-4 py-3">
           <View className="flex-row space-x-3">

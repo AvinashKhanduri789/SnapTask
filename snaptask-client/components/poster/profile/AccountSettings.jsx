@@ -22,7 +22,7 @@ const AccountSettings = ({ profileData }) => {
       <SettingItem
         icon="person-circle"
         label="Account Type"
-        value={profileData.accountType}
+        value={profileData.role}
         color="#10b981"
       />
       
@@ -40,7 +40,7 @@ const AccountSettings = ({ profileData }) => {
         color="#f59e0b"
       />
       
-      <SettingItem
+      {/* <SettingItem
         icon="document-text"
         label="Tasks Posted"
         value={profileData.taskPosted || "0"}
@@ -52,7 +52,7 @@ const AccountSettings = ({ profileData }) => {
         label="Poster Rating"
         value={profileData.rating}
         color="#f59e0b"
-      />
+      /> */}
     </View>
   );
 };

@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const TaskCard = ({ task, status, router }) => {
-  // Format the API data to match component expectations
+  
   const formatTaskData = (task) => {
-    // Format applicants text
+   
     const getApplicantsText = () => {
       if (status === 'new') {
         return `${task.applicantsCount} applicants`;
@@ -17,7 +17,7 @@ const TaskCard = ({ task, status, router }) => {
       return `${task.applicantsCount} applicants`;
     };
 
-    // Format posted time to relative time
+   
     const getRelativeTime = (dateString) => {
       const date = new Date(dateString);
       const now = new Date();
@@ -34,7 +34,7 @@ const TaskCard = ({ task, status, router }) => {
       }
     };
 
-    // Format deadline to relative time or status
+    
     const getDeadlineText = (dateString) => {
       if (status === 'completed') return 'Completed';
       

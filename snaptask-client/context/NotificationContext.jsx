@@ -6,16 +6,12 @@ import {api} from "../util/requester";
 import { useAuth } from "@/app/_layout";
 
 
-// =========================
-// 🔹 Create Context
-// =========================
+
 const NotificationContext = createContext(undefined);
 
 
 
-// =========================
-// 🔹 Custom Hook
-// =========================
+
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
@@ -24,9 +20,6 @@ export const useNotification = () => {
   return context;
 };
 
-// =========================
-// 🔹 Provider Component
-// =========================
 export const NotificationProvider = ({ children }) => {
   const [expoPushToken, setExpoPushToken] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -42,7 +35,7 @@ export const NotificationProvider = ({ children }) => {
    console.log("profile endpoint prefix is  ---> ", profileEndpointPrefix);
   
 
-  //  Configure global notification behavior
+
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -109,7 +102,7 @@ export const NotificationProvider = ({ children }) => {
       // You can handle navigation or custom logic here
     });
 
-    //  Cleanup on unmount (new Expo API)
+  
     return () => {
       isMounted = false;
       notificationListener.current?.remove();

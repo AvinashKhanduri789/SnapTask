@@ -367,7 +367,7 @@ const NotificationsTab = () => {
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Sheet Modal */}
+      
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -390,7 +390,7 @@ const NotificationsTab = () => {
               borderTopRightRadius: 24
             }}
           >
-            {/* Header with Close Button */}
+            
             <View className="flex-row justify-between items-center px-4 pt-4 pb-2">
               <View className="items-center flex-1">
                 <View className="w-12 h-1 bg-slate-300 rounded-full" />

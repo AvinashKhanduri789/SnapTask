@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    elevation: 4, // Android shadow
+    elevation: 4, 
   },
   label: {
     fontSize: 16,

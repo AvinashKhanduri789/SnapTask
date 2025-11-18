@@ -26,7 +26,7 @@ const BOTTOM_SHEET_HEIGHT =
   Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.92 : SCREEN_HEIGHT * 0.95;
 
 const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
-  const insets = useSafeAreaInsets(); // ✅ dynamically handles bottom inset
+  const insets = useSafeAreaInsets(); 
 
   const [formData, setFormData] = useState({
     title: taskData?.title || '',
@@ -106,11 +106,11 @@ const EditTaskBottomSheet = ({ visible, onClose, taskData, onSave }) => {
     const result = await request(api.put('/poster/update', payload));
 
     if (result.ok) {
-      Alert.alert('✅ Success', 'Task updated successfully!');
+      Alert.alert('Success', 'Task updated successfully!');
       onSave && onSave();
       onClose();
     } else {
-      Alert.alert('❌ Error', result.error?.detail || 'Failed to update task. Try again.');
+      Alert.alert('Error', result.error?.detail || 'Failed to update task. Try again.');
     }
   };
 

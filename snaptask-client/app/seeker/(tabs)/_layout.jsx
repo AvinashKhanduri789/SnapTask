@@ -94,7 +94,7 @@ export default function SeekerLayout() {
           }}
           listeners={{
             tabPress: () => {
-              // Reset badge when user opens Notifications tab
+              
               setUnreadCount(0);
             },
           }}

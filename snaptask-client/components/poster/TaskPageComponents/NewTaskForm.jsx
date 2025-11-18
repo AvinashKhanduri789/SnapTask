@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform, 
+  Dimensions,
+  Animated 
+} from 'react-native';
+
 import BasicInfoStep from '../TaskPageComponents/BasicInfoStep';
 import CategoryStep from '../TaskPageComponents/CategoryStep';
 import PaymentStep from '../TaskPageComponents/PaymentStep';
@@ -28,16 +38,33 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
     { id: 4, title: 'Preview' },
   ];
 
+  // -----------------------------
+  // SMOOTH ANIMATED PROGRESS BAR
+  // -----------------------------
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: currentStep,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [currentStep]);
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [1, steps.length],
+    outputRange: ["0%", "100%"]
+  });
+
+  // -----------------------------
+  // STEP CONTROLS
+  // -----------------------------
   const nextStep = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    }
+    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const updateFormData = (field, value) => {
@@ -45,12 +72,12 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
   };
 
   const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    if (onTaskCreated) {
-      onTaskCreated(formData);
-    }
+    if (onTaskCreated) onTaskCreated(formData);
   };
 
+  // -----------------------------
+  // STEP RENDERING
+  // -----------------------------
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -85,13 +112,7 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
           />
         );
       default:
-        return (
-          <BasicInfoStep 
-            formData={formData} 
-            updateFormData={updateFormData} 
-            screenWidth={SCREEN_WIDTH}
-          />
-        );
+        return null;
     }
   };
 
@@ -104,7 +125,7 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
         width: '100%',
       }}
     >
-      {/* Header - Full width */}
+      {/* HEADER */}
       <View style={{
         width: '100%',
         flexDirection: 'row',
@@ -126,7 +147,7 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
         </View>
       </View>
 
-      {/* Progress Bar - Full width */}
+      {/* PROGRESS BAR */}
       <View style={{ 
         width: '100%', 
         paddingHorizontal: Math.max(20, SCREEN_WIDTH * 0.05), 
@@ -137,40 +158,33 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
           width: '100%', 
           backgroundColor: '#e2e8f0', 
           borderRadius: 10, 
-          height: 6 
+          height: 6,
+          overflow: 'hidden'
         }}>
-          <View
+          <Animated.View
             style={{
               backgroundColor: '#6366f1',
-              borderRadius: 10,
               height: 6,
-              width: `${(currentStep / steps.length) * 100}%`,
-              transition: 'width 0.3s ease-in-out'
+              borderRadius: 10,
+              width: progressWidth,
             }}
           />
         </View>
       </View>
 
-      {/* Form Content - Full width */}
+      {/* CONTENT */}
       <ScrollView
         style={{ flex: 1, width: '100%' }}
-        contentContainerStyle={{ 
-          flexGrow: 1,
-          width: '100%'
-        }}
+        contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ 
-          flex: 1, 
-          paddingBottom: 16,
-          width: '100%'
-        }}>
+        <View style={{ flex: 1, width: '100%', paddingBottom: 16 }}>
           {renderStep()}
         </View>
       </ScrollView>
 
-      {/* Navigation Buttons - Full width */}
+      {/* FOOTER BUTTONS */}
       <View style={{
         width: '100%',
         paddingHorizontal: Math.max(20, SCREEN_WIDTH * 0.05),
@@ -179,13 +193,9 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
         borderTopWidth: 1,
         borderTopColor: '#f1f5f9'
       }}>
-        <View style={{ 
-          flexDirection: 'row', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          width: '100%'
-        }}>
-          {/* Back Button */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+
+          {/* BACK BUTTON */}
           {currentStep > 1 ? (
             <TouchableOpacity
               style={{
@@ -213,7 +223,7 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
             <View style={{ flex: 1, marginRight: 12 }} />
           )}
 
-          {/* Next/Submit Button */}
+          {/* NEXT OR SUBMIT */}
           {currentStep < steps.length ? (
             <TouchableOpacity
               style={{
@@ -251,10 +261,7 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
                 alignItems: 'center',
                 justifyContent: 'center',
                 shadowColor: '#3B82F6',
-                shadowOffset: {
-                  width: 0,
-                  height: 8,
-                },
+                shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.3,
                 shadowRadius: 16,
                 elevation: 8,
@@ -293,6 +300,7 @@ const NewTaskForm = ({ onTaskCreated, isLoading = false, isInBottomSheet = false
               )}
             </TouchableOpacity>
           )}
+
         </View>
       </View>
     </KeyboardAvoidingView>

@@ -8,58 +8,58 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const StatusTimeline = ({ status, postedOn, deadline }) => {
   // Generate timeline based on status
   const generateTimeline = () => {
-    const baseStages = [
-      { stage: 'Created', description: 'Task has been created and published' },
-      { stage: 'Assigned', description: 'Looking for the right candidate' },
-      { stage: 'Completed', description: 'Task successfully delivered' }
-    ];
-
     const currentDate = new Date().toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric' 
     });
 
     switch (status) {
-      case 'PENDING':
-        return [
-          { 
-            stage: 'Created', 
-            description: 'Task has been created and published',
-            completed: true,
-            date: postedOn ? new Date(postedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : currentDate
-          },
-          { 
-            stage: 'Assigned', 
-            description: 'Looking for the right candidate',
-            completed: false,
-            date: ''
-          },
-          { 
-            stage: 'Completed', 
-            description: 'Task successfully delivered',
-            completed: false,
-            date: ''
-          }
-        ];
-
       case 'ACTIVE':
         return [
           { 
             stage: 'Created', 
             description: 'Task has been created and published',
             completed: true,
+            current: true, // This is the current stage for ACTIVE status
             date: postedOn ? new Date(postedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : currentDate
           },
           { 
             stage: 'Assigned', 
-            description: 'Work is currently in progress',
+            description: 'Waiting for someone to accept your task',
+            completed: false,
+            current: false,
+            date: ''
+          },
+          { 
+            stage: 'Completed', 
+            description: 'Task successfully delivered',
+            completed: false,
+            current: false,
+            date: ''
+          }
+        ];
+
+      case 'PENDING':
+        return [
+          { 
+            stage: 'Created', 
+            description: 'Task has been created and published',
             completed: true,
+            current: false,
+            date: postedOn ? new Date(postedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : currentDate
+          },
+          { 
+            stage: 'Assigned', 
+            description: 'Task has been assigned and work is in progress',
+            completed: true,
+            current: true, // This is the current stage for PENDING status
             date: currentDate
           },
           { 
             stage: 'Completed', 
             description: 'Task successfully delivered',
             completed: false,
+            current: false,
             date: deadline ? new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
           }
         ];
@@ -70,24 +70,31 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
             stage: 'Created', 
             description: 'Task has been created and published',
             completed: true,
+            current: false,
             date: postedOn ? new Date(postedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : currentDate
           },
           { 
             stage: 'Assigned', 
             description: 'Task was assigned and worked on',
             completed: true,
+            current: false,
             date: currentDate
           },
           { 
             stage: 'Completed', 
             description: 'Task successfully delivered',
             completed: true,
+            current: true, // This is the current stage for COMPLETED status
             date: currentDate
           }
         ];
 
       default:
-        return baseStages.map(stage => ({ ...stage, completed: false, date: '' }));
+        return [
+          { stage: 'Created', description: 'Task has been created', completed: false, current: true, date: '' },
+          { stage: 'Assigned', description: 'Looking for the right candidate', completed: false, current: false, date: '' },
+          { stage: 'Completed', description: 'Task successfully delivered', completed: false, current: false, date: '' }
+        ];
     }
   };
 
@@ -109,18 +116,11 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
     return isCurrent ? icons[stage] || 'ellipse' : 'ellipse-outline';
   };
 
-  const calculateProgress = () => {
-    const completedStages = timeline.filter(stage => stage.completed).length;
-    return (completedStages / timeline.length) * 100;
-  };
-
-  const progress = calculateProgress();
-
   const getStatusColor = () => {
     switch (status) {
       case 'COMPLETED': return '#10B981';
-      case 'ACTIVE': return '#3B82F6';
       case 'PENDING': return '#F59E0B';
+      case 'ACTIVE': return '#3B82F6';
       default: return '#6B7280';
     }
   };
@@ -128,17 +128,17 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
   const getStatusText = () => {
     switch (status) {
       case 'COMPLETED': return 'Completed';
-      case 'ACTIVE': return 'In Progress';
-      case 'PENDING': return 'Pending';
+      case 'PENDING': return 'In Progress';
+      case 'ACTIVE': return 'Active';
       default: return 'Unknown';
     }
   };
 
   // Responsive font sizes
   const getResponsiveFontSize = (baseSize) => {
-    if (SCREEN_WIDTH < 375) return baseSize - 1; // iPhone SE, small devices
-    if (SCREEN_WIDTH < 414) return baseSize;     // Standard iPhones
-    return baseSize + 1;                         // Larger devices
+    if (SCREEN_WIDTH < 375) return baseSize - 1;
+    if (SCREEN_WIDTH < 414) return baseSize;
+    return baseSize + 1;
   };
 
   return (
@@ -153,7 +153,6 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
       shadowRadius: 20,
       elevation: 8,
       overflow: 'hidden',
-      // REMOVED the marginHorizontal to make it full width like other components
     }}>
       {/* Header Gradient Bar */}
       <LinearGradient
@@ -166,10 +165,10 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
         }}
       />
       <View style={{ 
-        paddingHorizontal: Math.max(16, SCREEN_WIDTH * 0.05), // Responsive padding
+        paddingHorizontal: Math.max(16, SCREEN_WIDTH * 0.05),
         paddingVertical: 20 
       }}>
-        {/* Header with Progress - Fixed layout */}
+        {/* Header - Simplified without progress bar */}
         <View style={{ 
           flexDirection: 'row', 
           alignItems: 'flex-start', 
@@ -204,18 +203,18 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
                 color: '#1f2937',
                 marginBottom: 2
               }}>
-                Task Progress
+                Task Status
               </Text>
               <Text style={{
                 fontSize: getResponsiveFontSize(13),
                 color: '#6b7280',
                 fontWeight: '600'
               }}>
-                {Math.round(progress)}% completed • {getStatusText()}
+                Current status: {getStatusText()}
               </Text>
             </View>
           </View>
-          {/* Status Badge with fixed width */}
+          {/* Status Badge */}
           <View style={{
             backgroundColor: '#f0f9ff',
             paddingHorizontal: SCREEN_WIDTH < 375 ? 8 : 12,
@@ -223,7 +222,7 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
             borderRadius: 12,
             borderWidth: 1,
             borderColor: '#e0f2fe',
-            minWidth: SCREEN_WIDTH < 375 ? 70 : 80, // Fixed minimum width
+            minWidth: SCREEN_WIDTH < 375 ? 70 : 80,
             marginLeft: 8
           }}>
             <Text style={{
@@ -237,52 +236,10 @@ const StatusTimeline = ({ status, postedOn, deadline }) => {
           </View>
         </View>
 
-        {/* Progress Bar */}
-        <View style={{ marginBottom: 24 }}>
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: 8 
-          }}>
-            <Text style={{ 
-              fontSize: getResponsiveFontSize(12), 
-              fontWeight: '600', 
-              color: '#6b7280' 
-            }}>
-              Overall Progress
-            </Text>
-            <Text style={{ 
-              fontSize: getResponsiveFontSize(12), 
-              fontWeight: '700', 
-              color: '#3B82F6' 
-            }}>
-              {Math.round(progress)}%
-            </Text>
-          </View>
-          <View style={{
-            height: 8,
-            backgroundColor: '#f1f5f9',
-            borderRadius: 4,
-            overflow: 'hidden'
-          }}>
-            <LinearGradient
-              colors={['#3B82F6', '#6366F1', '#8B5CF6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                height: '100%',
-                width: `${progress}%`,
-                borderRadius: 4
-              }}
-            />
-          </View>
-        </View>
-
         {/* Timeline Stages */}
         <View style={{ gap: 12 }}>
           {timeline.map((stage, index) => {
-            const isCurrent = !stage.completed && index === timeline.findIndex(s => !s.completed);
+            const isCurrent = stage.current;
             const isUpcoming = !stage.completed && !isCurrent;
             
             return (

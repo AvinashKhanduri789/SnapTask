@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useNotification } from "../../../context/NotificationContext"; // ✅ use your notification hook
+import { useNotification } from "../../../context/NotificationContext";
 
 export default function PosterLayout() {
   const { notification } = useNotification();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Increment badge count when a new notification arrives
+
   useEffect(() => {
     if (notification) {
       setUnreadCount((prev) => prev + 1);
@@ -26,7 +26,7 @@ export default function PosterLayout() {
           tabBarInactiveTintColor: "#9ca3af",
         }}
       >
-        {/* 🏠 Home */}
+        
         <Tabs.Screen
           name="home"
           options={{
@@ -37,7 +37,7 @@ export default function PosterLayout() {
           }}
         />
 
-        {/* 📋 Tasks */}
+       
         <Tabs.Screen
           name="task"
           options={{
@@ -48,7 +48,7 @@ export default function PosterLayout() {
           }}
         />
 
-        {/* 🔔 Notifications with badge */}
+       
         <Tabs.Screen
           name="notifications"
           options={{
@@ -90,13 +90,12 @@ export default function PosterLayout() {
           }}
           listeners={{
             focus: () => {
-              // 👇 Reset the badge count when user opens Notifications tab
               setUnreadCount(0);
             },
           }}
         />
 
-        {/* 👤 Profile */}
+      
         <Tabs.Screen
           name="profile"
           options={{

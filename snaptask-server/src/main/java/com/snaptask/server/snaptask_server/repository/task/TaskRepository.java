@@ -12,7 +12,9 @@ import java.util.Optional;
 public interface TaskRepository extends MongoRepository<Task,String> {
     List<Task> findByPosterId(String posterId);
     List<Task> findByCategoryAndIsAssignedFalse(String category);
-    List<Task> findByAssignedSeekerIdAndIsAssignedTrue(String assignedSeekerId);
+    List<Task> findByAssignedSeekerIdAndIsAssignedTrueAndStatus(
+            String assignedSeekerId, TaskStatus status);
+
     List<Task> findByAssignedSeekerIdAndStatus(String assignedSeekerId, TaskStatus status);
 
 }

@@ -347,34 +347,7 @@ const ProfileInfo = ({ profileData, isEditing, updateProfileData }) => {
           color="#6366f1"
         />
 
-        {/* Stats Section */}
-        <Text className="text-lg font-bold text-slate-800 mb-4 mt-6 border-b border-slate-200 pb-2">Activity Stats</Text>
-
-        <View className="flex-row justify-between mb-4">
-          <View className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 flex-1 mr-2 border border-blue-200">
-            <View className="flex-row items-center mb-2">
-              <Ionicons name="document-text" size={16} color="#6366f1" />
-              <Text className="text-slate-600 text-xs font-semibold ml-1">Tasks Posted</Text>
-            </View>
-            <Text className="text-slate-800 text-xl font-bold">{profileData.taskPosted || 0}</Text>
-          </View>
-
-          <View className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 flex-1 mx-2 border border-green-200">
-            <View className="flex-row items-center mb-2">
-              <Ionicons name="checkmark-done" size={16} color="#10b981" />
-              <Text className="text-slate-600 text-xs font-semibold ml-1">Completed</Text>
-            </View>
-            <Text className="text-slate-800 text-xl font-bold">{profileData.completed || 0}</Text>
-          </View>
-
-          <View className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 flex-1 ml-2 border border-amber-200">
-            <View className="flex-row items-center mb-2">
-              <Ionicons name="time" size={16} color="#f59e0b" />
-              <Text className="text-slate-600 text-xs font-semibold ml-1">Active</Text>
-            </View>
-            <Text className="text-slate-800 text-xl font-bold">{profileData.active || 0}</Text>
-          </View>
-        </View>
+    
       </View>
 
       {/* Skills Selection Modal */}
