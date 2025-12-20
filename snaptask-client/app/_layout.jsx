@@ -6,7 +6,9 @@ import { NotificationProvider } from "../context/NotificationContext";
 import "../global.css";
 import { useApi } from "../util/useApi";
 import { api } from "../util/requester";
-import { Alert } from "react-native"; // ✅ added since you're using Alert
+import { Alert } from "react-native";
+import { SocketProvider } from "../context/SocketContext"; 
+
 
 // Auth Context
 const AuthContext = createContext();
@@ -19,7 +21,7 @@ export const GlobalAuthState = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        // 1️⃣ Load user from AsyncStorage
+        // Load user from AsyncStorage
         const storedUser = await AsyncStorage.getItem("userData");
 
         if (!storedUser) {
@@ -29,13 +31,13 @@ export const GlobalAuthState = ({ children }) => {
 
         const parsedUser = JSON.parse(storedUser);
 
-        // 2️⃣ Validate token directly using api.get
+        // Validate token directly using api.get
         await api.get("/api/validateToken");
 
-        // 3️⃣ If token is valid, restore user
+        // If token is valid, restore user
         setUserData(parsedUser);
       } catch (err) {
-        console.warn("❌ Token invalid or expired:", err?.detail || err);
+        console.warn("Token invalid or expired:", err?.detail || err);
         Alert.alert("Session Expired", err?.detail || "Please log in again.");
         await AsyncStorage.removeItem("userData");
         setUserData(null);
@@ -88,13 +90,15 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GlobalAuthState>
         <NotificationProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="auth" />
-            <Stack.Screen name="poster" />
-            <Stack.Screen name="seeker" />
-          </Stack>
-          <AuthGate />
+          <SocketProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="auth" />
+              <Stack.Screen name="poster" />
+              <Stack.Screen name="seeker" />
+            </Stack>
+            <AuthGate />
+          </SocketProvider>
         </NotificationProvider>
       </GlobalAuthState>
     </GestureHandlerRootView>

@@ -1,0 +1,20 @@
+{
+  "name": "snap-task-chat-service",
+  "version": "1.0.0",
+  "description": "chat service for snap task project",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+  },
+  "author": "Avinash Khanduri",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.0.1",
+    "nodemon": "^3.1.11",
+    "socket.io": "^4.8.1"
+  }
+}

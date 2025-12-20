@@ -12,11 +12,13 @@ import {
   Dimensions,
   StatusBar,
   Platform,
-  Modal
+  Modal,
+  ActivityIndicator
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api } from "../../../util/requester";
 import { useApi } from "../../../util/useApi";
+import chatApi from "../../../util/chat-serviceApi";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -46,7 +48,7 @@ const TaskDetailScreen = () => {
   const [taskData, setTaskData] = useState(null);
   const { request, isLoading, error } = useApi();
   const [showCompletionSheet, setShowCompletionSheet] = useState(false);
-
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
     fetchTaskDetails();
@@ -69,6 +71,37 @@ const TaskDetailScreen = () => {
   useEffect(() => {
     console.log("task data in task detail screen is--->", taskData)
   }, [taskData]);
+
+  const handleOpenChat = async () => {
+    if (!taskData?.postedBy?.posterId) {
+      console.log("No poster ID available");
+      return;
+    }
+
+    setIsCreatingChat(true);
+
+    try {
+      const result = await request(
+        chatApi.post("/conversation", { receiverId: taskData.postedBy.posterId })
+      );
+
+      if (!result.ok) {
+        console.log("Error creating chat:", result.error);
+        return;
+      }
+
+      const conversationId = result.data.data;
+
+      router.push({
+        pathname: "/chat/[conversationId]",
+        params: { conversationId: String(conversationId), name: taskData.postedBy?.name || "Poster" },
+      });
+    } catch (err) {
+      console.error("Error in handleOpenChat:", err);
+    } finally {
+      setIsCreatingChat(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -163,6 +196,41 @@ const TaskDetailScreen = () => {
                 {taskData.deadline}
               </Text>
             </View>
+
+            {/* Chat Button - Only show if assignedToMe is true */}
+            {taskData.assignedToMe && (
+              <TouchableOpacity
+                style={[
+                  styles.chatButton,
+                  isCreatingChat && styles.chatButtonDisabled
+                ]}
+                onPress={handleOpenChat}
+                disabled={isCreatingChat}
+                activeOpacity={0.8}
+              >
+                <View style={styles.chatButtonContent}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={scaleFont(18)}
+                    color="#fff"
+                  />
+                  <Text style={styles.chatButtonText}>
+                    {isCreatingChat ? (
+                      "Opening chat..."
+                    ) : (
+                      `Message ${taskData.postedBy?.name || "Poster"}`
+                    )}
+                  </Text>
+                </View>
+                {isCreatingChat && (
+                  <ActivityIndicator
+                    size="small"
+                    color="#fff"
+                    style={styles.chatButtonSpinner}
+                  />
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Applicants + Status */}
@@ -288,63 +356,54 @@ const TaskDetailScreen = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
-       <SafeAreaView style={styles.safeAreaBottom} edges={['bottom']}>
-    <View style={styles.bottomContainer}>
 
-  
-  {taskData.status?.toLowerCase() === "completed" ? null : (
+      <SafeAreaView style={styles.safeAreaBottom} edges={['bottom']}>
+        <View style={styles.bottomContainer}>
+          {taskData.status?.toLowerCase() === "completed" ? null : (
+            taskData.assignedToMe ? (
+              <TouchableOpacity
+                onPress={() => setShowCompletionSheet(true)}
+                activeOpacity={0.85}
+                style={[styles.bottomButton, styles.activeButton]}
+              >
+                <Ionicons name="checkmark-done" size={scaleFont(18)} color="#fff" />
+                <Text style={styles.bottomButtonText}>Mark as Completed</Text>
+              </TouchableOpacity>
+            ) : !taskData.alredyMadebid ? (
+              
+              <TouchableOpacity
+                onPress={() => router.push(`/seeker/biddigrequest/${taskData.id}`)}
+                activeOpacity={0.85}
+                style={[styles.bottomButton, styles.activeButton]}
+              >
+                <Ionicons name="send" size={scaleFont(18)} color="#fff" />
+                <Text style={styles.bottomButtonText}>Make Bidding Request</Text>
+              </TouchableOpacity>
+            ) : null // 🟡 Bid already submitted → show nothing
+          )}
+        </View>
 
-    taskData.assignedToMe ? (
-      
-      <TouchableOpacity
-        onPress={() => setShowCompletionSheet(true)}
-        activeOpacity={0.85}
-        style={[styles.bottomButton, styles.activeButton]}
-      >
-        <Ionicons name="checkmark-done" size={scaleFont(18)} color="#fff" />
-        <Text style={styles.bottomButtonText}>Mark as Completed</Text>
-      </TouchableOpacity>
-    ) : !taskData.alredyMadebid ? (
-      // 🔵 No bid yet → show bid button
-      <TouchableOpacity
-        onPress={() => router.push(`/seeker/biddigrequest/${taskData.id}`)}
-        activeOpacity={0.85}
-        style={[styles.bottomButton, styles.activeButton]}
-      >
-        <Ionicons name="send" size={scaleFont(18)} color="#fff" />
-        <Text style={styles.bottomButtonText}>Make Bidding Request</Text>
-      </TouchableOpacity>
-    ) : null // 🟡 Bid already submitted → show nothing
-  )}
-
-</View>
-
-
-  {/* Completion Request Modal */}
-  <Modal
-    animationType="slide"
-    transparent={true}
-    visible={showCompletionSheet}
-    onRequestClose={() => setShowCompletionSheet(false)}
-  >
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "flex-end",
-        backgroundColor: "rgba(0,0,0,0.4)",
-      }}
-    >
-      <CompletionRequestSheet
-        taskId={taskData.id}
-        onClose={() => setShowCompletionSheet(false)}
-      />
-    </View>
-  </Modal>
-</SafeAreaView>
-
-
-
-
+        {/* Completion Request Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showCompletionSheet}
+          onRequestClose={() => setShowCompletionSheet(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "flex-end",
+              backgroundColor: "rgba(0,0,0,0.4)",
+            }}
+          >
+            <CompletionRequestSheet
+              taskId={taskData.id}
+              onClose={() => setShowCompletionSheet(false)}
+            />
+          </View>
+        </Modal>
+      </SafeAreaView>
     </View>
   );
 };
@@ -461,6 +520,40 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontWeight: '600',
+  },
+  // Chat Button Styles
+  chatButton: {
+    backgroundColor: '#10B981',
+    borderRadius: moderateScale(12),
+    paddingVertical: verticalScale(12),
+    paddingHorizontal: moderateScale(16),
+    marginTop: verticalScale(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  chatButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    opacity: 0.8,
+  },
+  chatButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: moderateScale(8),
+  },
+  chatButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: scaleFont(14),
+  },
+  chatButtonSpinner: {
+    marginLeft: moderateScale(8),
   },
   statsContainer: {
     flexDirection: 'row',

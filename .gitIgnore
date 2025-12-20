@@ -1,0 +1,60 @@
+# ==============================
+# Java / Spring Boot
+# ==============================
+/target/
+/bin/
+/*.log
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+/.idea/
+/.vscode/
+/out/
+/build/
+
+# ==============================
+# OS / IDE
+# ==============================
+.DS_Store
+Thumbs.db
+*.swp
+
+# ==============================
+# Environment / Secret Files
+# ==============================
+*.env
+firebase_private_keys.json
+application.properties
+google-services.json
+snaptask-server/snap-task-chat-service/.env
+
+# ==============================
+# React Native
+# ==============================
+snaptask-client/node_modules/
+
+/dist/
+/npm-debug.log
+yarn-error.log
+
+snaptask-client/.expo/
+snaptask-client/android/
+snaptask-client/ios/
+
+
+node_modules/
+snaptask-server/snap-task-chat-service/node_modules/
+
+# ==============================
+# Others
+# ==============================
+*.tmp
+*.backup
+*.bak
+*.orig
+folder struture.txt
+idea.txt
+poster flow.txt
+seeker flow.txt

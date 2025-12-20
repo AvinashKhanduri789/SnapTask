@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="429e0c67-97e7-47d6-9554-fe46f9eb0f5f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../snaptask-client/app/auth/validateAccount.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../snaptask-client/app/auth/validateAccount.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/SnaptaskServerApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/bootstrap/RoleSeeder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/config/ApplicationConfiguration.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/config/FirebaseInitializer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/config/SecurityConfiguration.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/controller/CommonController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/controller/Validate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/controller/auth/AuthenticationController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/controller/poster/PosterController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/controller/poster/PosterProfileController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/controller/seeker/SeekerController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/controller/seeker/SeekerProfileController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/auth/CommonDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/auth/LoginResponseDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/auth/LoginUserDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/auth/RegisterUserDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/auth/ResetPasswordDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/auth/VerifyUserDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/bid/AssignedBidInfoDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/bid/PosterBidDetailDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/bid/PosterBidSummaryDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/notification/FCMNotificationDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/notification/NotificationDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/notification/PosterNotificationDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/notification/SeekerNotificationDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/CreateBidDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/CreateTaskDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/DeleteTaskDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/PosterTaskDetailDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/PosterTaskSummaryDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/PosterTasksGroupedDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/SeekerTaskDetail.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/SeekerTaskSummery.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/TaskCompletionRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/task/UpdateTaskDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/user/ProfileDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/user/RegisterFcmDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/user/SetLocationDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/dto/user/UpdatePosterProfileDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/enums/BidStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/enums/EmailNotificationType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/enums/NotificationStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/enums/NotificationType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/enums/TaskStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/enums/UserRole.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/enums/WorkMode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/exceptions/GlobalExceptionHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/exceptions/customExceptions/JwtExpiredException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/exceptions/customExceptions/NotificationException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/exceptions/customExceptions/ResourceNotFoundException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/filter/JwtAuthenticationFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/modals/Bid.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/modals/Notification.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/modals/Role.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/modals/Task.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/modals/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/modals/embedded/CompletionDetail.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/modals/embedded/TimelineStage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/repository/RoleRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/repository/bid/BidRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/repository/notification/CustomNotificationRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/repository/notification/NotificationRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/repository/task/TaskRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/repository/user/UserRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/ExpoPushService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/FirebaseService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/auth/AuthenticationService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/auth/JwtService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/bid/BidServices.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/email/NotificationEmailService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/task/TaskService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/service/user/UserService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/util/Email.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/snaptask/server/snaptask_server/util/Helper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/snaptask/server/snaptask_server/SnaptaskServerApplicationTests.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Class" />
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="34BqYej02K5fkPyvkqyFRmQRZCJ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.SnaptaskServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.snap_task_server.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.snaptask-server [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.snaptask-server [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.snaptask-server [package].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/projects/SnapTask/snaptask-server&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\projects\SnapTask\snaptask-server" />
+      <recent name="D:\projects\SnapTask\snaptask-server\src\main\resources" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.SnaptaskServerApplication">
+    <configuration name="SnaptaskServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.snaptask.server.snaptask_server.SnaptaskServerApplication" />
+      <module name="snaptask-server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.snaptask.server.snaptask_server.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="snap_task_server" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+      <deployment type="dockerfile">
+        <settings>
+          <option name="imageTag" value="latest" />
+          <option name="containerName" value="snap_task_server" />
+          <option name="portBindings">
+            <list>
+              <DockerPortBindingImpl>
+                <option name="containerPort" value="4000" />
+                <option name="hostPort" value="4000" />
+              </DockerPortBindingImpl>
+            </list>
+          </option>
+          <option name="sourceFilePath" value="Dockerfile" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Application.SnaptaskServerApplication" />
+      <item itemvalue="Docker.snap_task_server" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.SnaptaskServerApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="429e0c67-97e7-47d6-9554-fe46f9eb0f5f" name="Changes" comment="" />
+      <created>1760697362657</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1760697362657</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="org.springframework.web.servlet.resource.NoResourceFoundException" package="org.springframework.web.servlet.resource" />
+          <option name="timeStamp" value="2" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

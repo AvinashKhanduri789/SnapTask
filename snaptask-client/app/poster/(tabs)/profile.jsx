@@ -11,6 +11,7 @@ import StatusModal from '../../../components/common/StatusModal'; // Import Stat
 import { useAuth } from '../../_layout';
 import { useApi } from "../../../util/useApi";
 import { api } from "../../../util/requester";
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get('window');
 
@@ -32,7 +33,7 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+  const router = useRouter();
  
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -115,6 +116,7 @@ const ProfileScreen = () => {
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
     logout();
+    router.replace("/auth/login");
   };
 
   const handleLogoutCancel = () => {

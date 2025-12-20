@@ -46,24 +46,19 @@ const Login = () => {
     }
 
     try {
-      // 1️⃣ Send login request
-      const response = await request(
+      const {ok, error,data} = await request(
         api.post("/auth/login", { email, password })
       );
 
-      if (!response.ok) {
-        Alert.alert("Login failed", response.error?.data || "Invalid credentials"); 
+      if (!ok) {
+        console.log("trying to login ...... ", error);
+        Alert.alert("Login failed", error.detail || "Invalid credentials"); 
         return;
       }
-
-
-      const user = response.data; 
-     
+      // const user = response.data; 
+      const user = data;
       await AsyncStorage.setItem("userData", JSON.stringify(user));
-
-     
       setUserData(user);
-
     } catch (err) {
       console.error("Login error:", err);
       Alert.alert("Error", err.detail || "Something went wrong during login");

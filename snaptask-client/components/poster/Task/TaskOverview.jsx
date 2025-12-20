@@ -1,11 +1,46 @@
 import React from 'react';
-import { View, Text, useWindowDimensions } from 'react-native';
+import {
+  View,
+  Text,
+  useWindowDimensions,
+  TouchableOpacity,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDate } from '../../../util/helper';
+import { useRouter } from 'expo-router';
+import { useApi } from '../../../util/useApi';
+import chatApi from '../../../util/chat-serviceApi';
 
-const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
+const TaskOverview = ({
+  title,
+  status,
+  category,
+  postedOn,
+  deadline,
+  assignedBidInfo,
+}) => {
   const { width } = useWindowDimensions();
+  const router = useRouter();
+  const { request, isLoading } = useApi();
+
+  const handleOpenChat = async () => {
+    const result = await request(
+      chatApi.post("/conversation", { receiverId: assignedBidInfo?.seekerId })
+    );
+
+    if (!result.ok) {
+      console.log(result.error);
+      return;
+    }
+
+    const conversationId = result.data.data;
+
+    router.push({
+      pathname: "/chat/[conversationId]",
+      params: { conversationId: String(conversationId),name:assignedBidInfo?.seekerName },
+    });
+  };
 
   const calculateTimeRemaining = () => {
     const now = new Date();
@@ -15,42 +50,42 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
     if (timeDiff <= 0) return { text: 'Deadline passed', color: '#EF4444' };
 
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+    const hours = Math.floor(
+      (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+
     if (days > 0) {
-      return { 
-        text: `${days} day${days !== 1 ? 's' : ''} left`, 
-        color: days <= 1 ? '#F59E0B' : '#10B981'
-      };
-    } else {
-      return { 
-        text: `${hours} hour${hours !== 1 ? 's' : ''} left`, 
-        color: hours <= 6 ? '#EF4444' : '#F59E0B'
+      return {
+        text: `${days} day${days !== 1 ? 's' : ''} left`,
+        color: days <= 1 ? '#F59E0B' : '#10B981',
       };
     }
+
+    return {
+      text: `${hours} hour${hours !== 1 ? 's' : ''} left`,
+      color: hours <= 6 ? '#EF4444' : '#F59E0B',
+    };
   };
 
   const calculateProgress = () => {
     const now = new Date();
     const deadlineDate = new Date(deadline);
-    
-    
     const startDate = postedOn ? new Date(postedOn) : new Date();
-    
+
     const total = deadlineDate - startDate;
     const elapsed = now - startDate;
-    
-    if (total <= 0) return 100; // Deadline already passed
-    if (elapsed <= 0) return 0; // Task not started yet
-    if (elapsed >= total) return 100; // Deadline passed
-    
+
+    if (total <= 0) return 100;
+    if (elapsed <= 0) return 0;
+    if (elapsed >= total) return 100;
+
     return Math.round((elapsed / total) * 100);
   };
 
   const getProgressBarColors = (progress) => {
-    if (progress >= 100) return ['#EF4444', '#DC2626']; 
-    if (progress >= 80) return ['#F59E0B', '#D97706']; 
-    if (progress >= 50) return ['#3B82F6', '#2563EB']; 
+    if (progress >= 100) return ['#EF4444', '#DC2626'];
+    if (progress >= 80) return ['#F59E0B', '#D97706'];
+    if (progress >= 50) return ['#3B82F6', '#2563EB'];
     return ['#10B981', '#059669'];
   };
 
@@ -79,6 +114,7 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
   const timeRemaining = calculateTimeRemaining();
   const progress = calculateProgress();
   const progressBarColors = getProgressBarColors(progress);
+  const hasAssignedBid = !!assignedBidInfo?.seekerId;
 
   return (
     <View
@@ -103,8 +139,14 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
       />
 
       <View style={{ padding: 20 }}>
-        {/* Header */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 16,
+            flexWrap: 'wrap',
+          }}
+        >
           <LinearGradient
             colors={['#6366F1', '#3B82F6']}
             style={{
@@ -126,7 +168,6 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
                 fontWeight: '800',
                 color: '#1f2937',
                 marginBottom: 6,
-                flexWrap: 'wrap',
               }}
               numberOfLines={2}
             >
@@ -145,8 +186,19 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
                   gap: 5,
                 }}
               >
-                <Ionicons name={icons[status] || icons.default} size={12} color="#fff" />
-                <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff', textTransform: 'uppercase' }}>
+                <Ionicons
+                  name={icons[status] || icons.default}
+                  size={12}
+                  color="#fff"
+                />
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '700',
+                    color: '#fff',
+                    textTransform: 'uppercase',
+                  }}
+                >
                   {status}
                 </Text>
               </LinearGradient>
@@ -159,16 +211,18 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
                   borderRadius: 10,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 5,
                 }}
               >
-                <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}>{category}</Text>
+                <Text
+                  style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}
+                >
+                  {category}
+                </Text>
               </LinearGradient>
             </View>
           </View>
         </View>
 
-        {/* Details */}
         <View
           style={{
             backgroundColor: '#f8fafc',
@@ -178,28 +232,72 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
             borderColor: '#f1f5f9',
           }}
         >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              marginBottom: 14,
+            }}
+          >
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280' }}>Posted On</Text>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#1f2937' }}>
+              <Text
+                style={{ fontSize: 11, fontWeight: '600', color: '#6b7280' }}
+              >
+                Posted On
+              </Text>
+              <Text
+                style={{ fontSize: 13, fontWeight: '700', color: '#1f2937' }}
+              >
                 {postedOn ? formatDate(postedOn) : 'Recently'}
               </Text>
             </View>
+
             <View style={{ flex: 1, alignItems: 'flex-end' }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b7280' }}>Deadline</Text>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#1f2937' }}>{formatDate(deadline)}</Text>
+              <Text
+                style={{ fontSize: 11, fontWeight: '600', color: '#6b7280' }}
+              >
+                Deadline
+              </Text>
+              <Text
+                style={{ fontSize: 13, fontWeight: '700', color: '#1f2937' }}
+              >
+                {formatDate(deadline)}
+              </Text>
             </View>
           </View>
 
-          {/* Progress Bar */}
           <View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: '#6b7280' }}>Time Progress</Text>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: timeRemaining.color }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                marginBottom: 6,
+              }}
+            >
+              <Text
+                style={{ fontSize: 12, fontWeight: '600', color: '#6b7280' }}
+              >
+                Time Progress
+              </Text>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: '700',
+                  color: timeRemaining.color,
+                }}
+              >
                 {timeRemaining.text}
               </Text>
             </View>
-            <View style={{ height: 6, backgroundColor: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
+
+            <View
+              style={{
+                height: 6,
+                backgroundColor: '#e5e7eb',
+                borderRadius: 3,
+                overflow: 'hidden',
+              }}
+            >
               <LinearGradient
                 colors={progressBarColors}
                 start={{ x: 0, y: 0 }}
@@ -207,11 +305,53 @@ const TaskOverview = ({ title, status, category, postedOn, deadline }) => {
                 style={{
                   height: '100%',
                   width: `${progress}%`,
-                  borderRadius: 3,
                 }}
               />
             </View>
           </View>
+
+          {hasAssignedBid && (
+            <View style={{ marginTop: 16 }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                disabled={isLoading}
+                onPress={handleOpenChat}
+                style={{
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  opacity: isLoading ? 0.7 : 1,
+                }}
+              >
+                <LinearGradient
+                  colors={['#4F46E5', '#6366F1']}
+                  style={{
+                    paddingVertical: 14,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={18}
+                    color="#fff"
+                  />
+                  <Text
+                    style={{
+                      color: '#fff',
+                      fontWeight: '700',
+                      fontSize: 14,
+                    }}
+                  >
+                    {isLoading
+                      ? 'Opening chat...'
+                      : `Message ${assignedBidInfo.seekerName}`}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
     </View>

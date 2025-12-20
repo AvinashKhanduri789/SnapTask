@@ -23,9 +23,9 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const OTP_LENGTH = 6;
-const RESEND_COOLDOWN = 900; 
+const RESEND_COOLDOWN = 900;
 
-const validateAccount = () => {
+const ValidateAccount = () => {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,12 +35,13 @@ const validateAccount = () => {
   const [showOTP, setShowOTP] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const slideAnim = useState(new Animated.Value(50))[0];
-  const buttonScale = new Animated.Value(1);
+  const buttonScale = useRef(new Animated.Value(1)).current;
   const hiddenInputRef = useRef(null);
   const emailInputRef = useRef(null);
   const router = useRouter();
   const { request } = useApi();
   const mounted = useRef(true);
+  const keyboardVisible = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -57,17 +58,36 @@ const validateAccount = () => {
 
   useEffect(() => {
     if (showOTP) {
-      const t = setTimeout(() => hiddenInputRef.current?.focus(), 600);
+      const t = setTimeout(() => {
+        if (hiddenInputRef.current) {
+          hiddenInputRef.current.focus();
+        }
+      }, 600);
       return () => clearTimeout(t);
     }
   }, [showOTP]);
 
   useEffect(() => {
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      setIsFocused(false);
-      hiddenInputRef.current?.blur();
-    });
-    return () => hideSub.remove();
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        keyboardVisible.current = true;
+        setIsFocused(true);
+      }
+    );
+
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        keyboardVisible.current = false;
+        setIsFocused(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -95,7 +115,7 @@ const validateAccount = () => {
 
   const handleSendOTP = async () => {
     if (isSending) return;
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
@@ -113,11 +133,11 @@ const validateAccount = () => {
 
       // Save email for verification
       await AsyncStorage.setItem("pendingVerificationEmail", email);
-      
+
       // Show OTP section and start resend timer
       setShowOTP(true);
       setResendTimer(RESEND_COOLDOWN);
-      
+
       Alert.alert(
         "OTP Sent",
         "Verification code has been sent to your email address."
@@ -130,7 +150,7 @@ const validateAccount = () => {
         err?.message ||
         "Failed to send verification code. Please try again.";
 
-      Alert.alert("Send Failed", msg);
+      Alert.alert("Unable to send", msg);
     } finally {
       if (mounted.current) setIsSending(false);
     }
@@ -149,7 +169,7 @@ const validateAccount = () => {
     try {
       const storedEmail = await AsyncStorage.getItem("pendingVerificationEmail");
       const verifyEmail = storedEmail || email;
-      
+
       if (!verifyEmail) throw new Error("No email found for verification.");
 
       const body = { email: verifyEmail, otp: code };
@@ -186,7 +206,7 @@ const validateAccount = () => {
     try {
       const storedEmail = await AsyncStorage.getItem("pendingVerificationEmail");
       const resendEmail = storedEmail || email;
-      
+
       if (!resendEmail) {
         Alert.alert("Error", "No email found. Please enter your email again.");
         setShowOTP(false);
@@ -210,10 +230,12 @@ const validateAccount = () => {
   };
 
   const focusHidden = () => {
-    const input = hiddenInputRef.current;
-    if (!input) return;
-    if (input.isFocused && input.isFocused()) return;
-    input.focus();
+    if (hiddenInputRef.current) {
+      // Only focus if keyboard is not already visible
+      if (!keyboardVisible.current) {
+        hiddenInputRef.current.focus();
+      }
+    }
   };
 
   const formatTime = (seconds) => {
@@ -229,8 +251,18 @@ const validateAccount = () => {
       ? ['#6366F1', '#3B82F6']
       : ['#E5E7EB', '#E5E7EB'];
     return (
-      <TouchableOpacity key={index} activeOpacity={0.8} onPress={focusHidden} style={{ flex: 1 }}>
-        <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ borderRadius: 14, padding: 2 }}>
+      <TouchableOpacity
+        key={index}
+        activeOpacity={0.8}
+        onPress={focusHidden}
+        style={{ flex: 1 }}
+      >
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ borderRadius: 14, padding: 2 }}
+        >
           <View style={{
             height: 56,
             borderRadius: 12,
@@ -238,7 +270,9 @@ const validateAccount = () => {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827', letterSpacing: 0 }}>{char}</Text>
+            <Text style={{ fontSize: 22, fontWeight: '700', color: '#111827', letterSpacing: 0 }}>
+              {char}
+            </Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -247,21 +281,51 @@ const validateAccount = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 32, paddingVertical: 20 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 32,
+            paddingVertical: 20
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="none"
+        >
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
             {/* Header */}
             <View style={{ alignItems: 'center', marginBottom: 32 }}>
-              <LinearGradient colors={["#6366F1", "#3B82F6"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={{ width: 80, height: 80, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 12 }}>
+              <LinearGradient
+                colors={["#6366F1", "#3B82F6"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                  shadowColor: '#6366F1',
+                  shadowOffset: { width: 0, height: 12 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 20,
+                  elevation: 12
+                }}
+              >
                 <Ionicons name="shield-checkmark-outline" size={32} color="#FFFFFF" />
               </LinearGradient>
               <Text style={{ fontSize: 28, fontWeight: '800', color: '#1f2937', marginBottom: 8, letterSpacing: -0.5 }}>
                 {showOTP ? 'Verify Your Account' : 'Verify Your Email'}
               </Text>
               <Text style={{ fontSize: 16, color: '#6b7280', textAlign: 'center', lineHeight: 24 }}>
-                {showOTP 
-                  ? 'Enter the 6-digit code sent to your email' 
+                {showOTP
+                  ? 'Enter the 6-digit code sent to your email'
                   : 'Enter your email to receive a verification code'
                 }
               </Text>
@@ -317,29 +381,58 @@ const validateAccount = () => {
                   </View>
                 </View>
 
+                {/* Transparent Touchable Area to Trigger Keyboard */}
+                <TouchableOpacity
+                  style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: 60,
+                    top: 0,
+                    left: 0,
+                    zIndex: 2,
+                    opacity: 0,
+                  }}
+                  activeOpacity={1}
+                  onPress={focusHidden}
+                >
+                  <View style={{ width: '100%', height: '100%' }} />
+                </TouchableOpacity>
+
                 {/* Hidden Input */}
-                <TextInput
-                  ref={hiddenInputRef}
-                  value={code}
-                  onChangeText={handleOTPChange}
-                  keyboardType="number-pad"
-                  textContentType="oneTimeCode"
-                  autoComplete="one-time-code"
-                  maxLength={OTP_LENGTH}
-                  style={{ position: 'absolute', opacity: 0.01, height: 1, width: 1, bottom: 0, left: 0 }}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  showSoftInputOnFocus
-                  caretHidden
-                  contextMenuHidden
-                  underlineColorAndroid="transparent"
-                  blurOnSubmit={false}
-                  editable
-                  importantForAutofill="yes"
-                  autoCorrect={false}
-                  focusable
-                  disableFullscreenUI
-                />
+                <View style={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: 60,
+                  top: 0,
+                  left: 0,
+                  zIndex: 1,
+                  opacity: 0,
+                }}>
+                  <TextInput
+                    ref={hiddenInputRef}
+                    value={code}
+                    onChangeText={handleOTPChange}
+                    keyboardType="number-pad"
+                    textContentType="oneTimeCode"
+                    autoComplete="one-time-code"
+                    maxLength={OTP_LENGTH}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    showSoftInputOnFocus={true}
+                    caretHidden={true}
+                    contextMenuHidden={true}
+                    underlineColorAndroid="transparent"
+                    blurOnSubmit={false}
+                    editable={true}
+                    importantForAutofill="yes"
+                    autoCorrect={false}
+                    autoFocus={showOTP}
+                  />
+                </View>
 
                 {/* Resend */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24, marginTop: 8 }}>
@@ -417,7 +510,7 @@ const validateAccount = () => {
             {/* Footer */}
             <View style={{ alignItems: 'center', marginTop: 24 }}>
               <Text style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', lineHeight: 20, fontWeight: '500' }}>
-                {showOTP 
+                {showOTP
                   ? 'Enter the code to continue. Make sure you typed it correctly.'
                   : 'We will send a 6-digit verification code to your email address.'
                 }
@@ -430,4 +523,4 @@ const validateAccount = () => {
   );
 };
 
-export default validateAccount;
+export default ValidateAccount;

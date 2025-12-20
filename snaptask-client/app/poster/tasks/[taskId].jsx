@@ -2,7 +2,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "../../../util/requester"; // ✅ fixed import
+import api from "../../../util/requester";
 import { useApi } from "../../../util/useApi";
 
 import ActionButtons from "../../../components/poster/Task/ActionButtons";
@@ -28,12 +28,12 @@ const TaskDetail = () => {
   const fetchTaskDetail = async () => {
     const result = await request(api.get(`/poster/task/${taskId}`));
     if (result.ok) setTaskData(result.data);
-    else console.log("❌ Error fetching task:", result.error);
+    else console.log("Error fetching task:", result.error);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log("in task detail page task data is-->", taskData);
-  },[taskData]);
+  }, [taskData]);
 
   const handleTaskUpdate = () => setRefreshTrigger((prev) => prev + 1);
 
@@ -68,11 +68,12 @@ const TaskDetail = () => {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
           <TaskOverview
-            title={taskData.title}
-            status={taskData.status}
-            category={taskData.category}
-            postedOn={taskData.postedOn}
-            deadline={taskData.deadline}
+            title={taskData?.title ?? ''}
+            status={taskData?.status ?? 'PENDING'}
+            category={taskData?.category ?? 'Other'}
+            postedOn={taskData?.postedOn ?? null}
+            deadline={taskData?.deadline}
+            assignedBidInfo={taskData?.assignedBidInfo ?? null}
           />
 
           <StatusTimeline
@@ -96,7 +97,7 @@ const TaskDetail = () => {
             <BidsSection bids={taskData.bidsList || []} />
           )}
 
-         
+
           {taskData.status !== "COMPLETED" && taskData.taskCompletionRequest && (
             <CompletionRequestSection
               completion={taskData.taskCompletionRequest}
