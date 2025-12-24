@@ -22,11 +22,11 @@ import { useApi } from '../../util/useApi';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ChatScreen = () => {
-  
-  const { conversationId } = useLocalSearchParams();
-  const {name} = useLocalSearchParams();
 
- 
+  const { conversationId } = useLocalSearchParams();
+  const { name } = useLocalSearchParams();
+
+
   const router = useRouter();
   const socket = useSocket();
   const { userData } = useAuth();
@@ -36,6 +36,8 @@ const ChatScreen = () => {
   // Refs
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+
+  const isAtBottomRef = useRef(true);
 
   // State
   const [messages, setMessages] = useState([]);
@@ -50,11 +52,17 @@ const ChatScreen = () => {
   const [otherUserId, setOtherUserId] = useState(null);
   const [otherUserName, setOtherUserName] = useState('');
 
-  useEffect(()=>{
+  useEffect(() => {
     setOtherUserId(name);
-  },[name]);
+  }, [name]);
 
-  
+  useEffect(() => {
+    if (otherUsertyping && isAtBottomRef.current) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [otherUsertyping]);
+
+
   const fetchMessages = useCallback(
     async (pageNumber = 1) => {
       if (pageNumber === 1) {
@@ -79,7 +87,7 @@ const ChatScreen = () => {
         return;
       }
 
-     
+
       const responseData = result.data.data;
       const { messages = [], pagination } = responseData;
 
@@ -101,7 +109,7 @@ const ChatScreen = () => {
         setMessages(prev => [...messages, ...prev]);
       }
 
-      
+
       const hasMore =
         pagination.page < pagination.totalPages;
 
@@ -143,19 +151,6 @@ const ChatScreen = () => {
     setInputText('');
     setIsSending(true);
 
-    
-    const optimisticMessage = {
-      _id: `temp-${Date.now()}`,
-      conversationId,
-      senderId: userData?.id,
-      receiverId: otherUserId || '',
-      content: messageContent,
-      seen: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, optimisticMessage]);
-
     try {
       socket.emit('send_message', {
         conversationId,
@@ -163,20 +158,15 @@ const ChatScreen = () => {
       });
 
       socket.emit('typing_stop', { conversationId });
-
       Keyboard.dismiss();
 
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => prev.filter(msg => msg._id !== optimisticMessage._id));
-      Alert.alert('Error', 'Failed to send message. Please try again.');
+      Alert.alert('Error', 'Failed to send message.');
     } finally {
       setIsSending(false);
     }
-  }, [inputText, isSending, socket, conversationId, userData?.id, otherUserId]);
+  }, [inputText, isSending, socket, conversationId]);
+
 
   const handletyping = useCallback((text) => {
     setInputText(text);
@@ -494,10 +484,25 @@ const ChatScreen = () => {
             ) : null
           }
           showsVerticalScrollIndicator={false}
+
+          // 👇 NEW: track if user is at bottom
+          onScroll={({ nativeEvent }) => {
+            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+            const isAtBottom =
+              layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+
+            isAtBottomRef.current = isAtBottom;
+          }}
+          scrollEventThrottle={16}
+
+
           onContentSizeChange={() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
+            if (isAtBottomRef.current) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }
           }}
         />
+
 
         {/* Input Area */}
         <View style={styles.inputContainer}>
@@ -622,7 +627,7 @@ const styles = StyleSheet.create({
   messageListContent: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    paddingBottom: 16,
+    paddingBottom: 40,
   },
   messageContainer: {
     marginVertical: 4,

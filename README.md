@@ -1,7 +1,7 @@
 SnapTask
 
 SnapTask is a task-based collaboration app where people who need work done (Posters) can post tasks, and people willing to do the work (Seekers) can bid and complete them.
-The goal of this project is to provide a smooth, real-world experience where posting tasks, managing bids, handling notifications, and completing work feels simple and reliable.
+The goal of this project is to provide a smooth, real-world experience where posting tasks, managing bids, handling notifications, communicating in real-time, and completing work feels simple and reliable.
 
 This project includes a React Native (Expo Router) mobile application and a Spring Boot + MongoDB backend.
 Both sides are built to be scalable and ready for production-level use.
@@ -14,7 +14,7 @@ This is the same build I use for testing the app on real devices:
 Download Build:
 https://expo.dev/accounts/avinash_khanduri.dev/projects/HelpHive_client/builds/08033560-d01f-415d-905c-330d49f4fd48
 
-How SnapTask Works 
+How SnapTask Works
 
 Below is a breakdown of how different parts of the app work.
 Each section also includes a screenshot placeholder so you can replace them later.
@@ -31,9 +31,11 @@ What it means for real users:
 People only see what they’re supposed to see.
 
 Screenshot:
-![Auth Screen1](screenshots/auth1.jpg)
-![Auth Screen2](screenshots/auth2.jpg)
-![Auth Screen3](screenshots/auth3.jpg)
+
+
+
+
+
 
 2. Complete Poster Flow (Task Posting, Managing, Assigning)
 
@@ -55,9 +57,9 @@ Close the task after completion
 This makes the workflow similar to real gig platforms but much simpler.
 
 Screenshot:
-![Poster Flow 1](screenshots/poster dashbord.jpg)
-![Poster Flow 2](screenshots/poster dashbord (2).jpg)
-![Poster Flow 1](screenshots/posterDashbord.jpg)
+
+
+
 
 3. Seeker Flow (Bidding + Completion)
 
@@ -67,9 +69,9 @@ They can update their skills, respond faster, and track their accepted tasks.
 Once a bid is accepted, Seekers update task progress and finally mark it completed with notes and submission proof.
 
 Screenshot:
-![Seeker Bidding](screenshots/seekerDashBord.jpg)
-![Seeker Bidding](screenshots/seekerDashBord (2).jpg)
-![Seeker Bidding](screenshots/seekerTaskDetailScreen.jpg)
+
+
+
 
 4. Real-Time Notifications (Expo Push + FCM)
 
@@ -91,9 +93,30 @@ Both background and foreground notifications are supported.
 The system also stores notifications in MongoDB and shows them in the app.
 
 Screenshot:
-![Notifications](screenshots/notification.jpg)
 
-5. Location-Based Features
+
+5. Real-Time Chat System (Socket.IO)
+
+SnapTask includes a built-in real-time chat feature so Posters and Seekers can communicate directly inside the app once a task is active or assigned.
+
+The chat system supports:
+
+Real-time message delivery
+
+Typing indicators
+
+Seen (read) status
+
+Conversation-based chat rooms
+
+Messages are delivered instantly using Socket.IO and stored in MongoDB so users can see past conversations anytime.
+
+This removes the need for external messaging apps and keeps all task-related communication in one place.
+
+Screenshot:
+
+
+6. Location-Based Features
 
 SnapTask also comes with live-location support.
 Some notifications and certain task recommendations can be based on user location.
@@ -103,9 +126,9 @@ Posters can also receive updates about Seekers working nearby.
 Location is stored using MongoDB’s GeoJSON structure, which makes distance queries easy and efficient.
 
 Screenshot:
-![Location Features](screenshots/location2.jpg)
 
-6. User Profile Management
+
+7. User Profile Management
 
 Each user has their own profile where they can update:
 
@@ -124,9 +147,9 @@ Role (Poster / Seeker)
 Seekers also have performance metrics like success rate, completion count, and response time.
 
 Screenshot:
-![User Profile](screenshots/userProfile.jpg)
 
-7. Completion System
+
+8. Completion System
 
 Once a Seeker finishes a task, they submit:
 
@@ -140,9 +163,9 @@ The Poster then reviews the submission and approves it.
 The whole workflow is stored and tracked in MongoDB using a proper embedded CompletionDetail model.
 
 Screenshot:
-![Completion](screenshots/completion.png)
 
-8. Timeline & Dashboard Summaries
+
+9. Timeline & Dashboard Summaries
 
 Both Poster and Seeker dashboards have quick summaries:
 
@@ -158,13 +181,12 @@ Notifications
 
 Task timelines
 
-These summaries are specially designed to load fast and help users understand their activity without navigating too much.
+These summaries are designed to load fast and help users understand their activity without navigating too much.
 
 Screenshot:
-![Dashboard](screenshots/logoAndSplashScreen.jpg)
+
 
 Tech Stack
-
 Frontend
 
 React Native
@@ -185,10 +207,12 @@ Spring Data MongoDB
 
 Firebase FCM
 
+Socket.IO (real-time messaging)
+
 Database
 
 MongoDB with lightweight references
 
-GeoJSON for location
+GeoJSON for location support
 
 Proper indexes for performance
