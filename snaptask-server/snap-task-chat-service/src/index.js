@@ -2,7 +2,7 @@ import { httpServer,io } from "./app.js";
 import dotenv from "dotenv"
 import { connectDb } from "./db/index.js";
 
-dotenv.config();
+dotenv.config({ override: false }); 
 
 connectDb().then(
     ()=>{
