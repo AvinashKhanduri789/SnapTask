@@ -2,7 +2,11 @@ import { httpServer,io } from "./app.js";
 import dotenv from "dotenv"
 import { connectDb } from "./db/index.js";
 
-dotenv.config({ override: false }); 
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
+
+
 
 connectDb().then(
     ()=>{
