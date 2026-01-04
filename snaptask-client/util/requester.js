@@ -4,7 +4,7 @@
   // https://snap-task-server.onrender.com
   // http://10.241.53.30:4000
   export const api = axios.create({
-   baseURL: "http://10.191.99.30:4001", 
+   baseURL: "https://snap-task-server.onrender.com", 
     // timeout: 10000,
     headers: {
       "Content-Type": "application/json",

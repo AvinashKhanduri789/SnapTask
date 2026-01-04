@@ -8,6 +8,7 @@ const app = express();
 import conversationRoute from "./routes/conversation.route.js";
 import chatSocket from "./sockets/chat.socket.js";
 import { socketEvents } from "./constants.js";
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true

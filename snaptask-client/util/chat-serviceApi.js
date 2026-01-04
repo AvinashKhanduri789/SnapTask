@@ -3,7 +3,7 @@
   
   // http://10.241.53.30:4000
   export const chatApi = axios.create({
-   baseURL: "http://10.191.99.30:4002", 
+   baseURL: "https://snaptask-chat.onrender.com", 
     // timeout: 10000,
     headers: {
       "Content-Type": "application/json",

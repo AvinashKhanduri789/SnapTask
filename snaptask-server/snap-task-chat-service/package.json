@@ -4,7 +4,8 @@
   "description": "chat service for snap task project",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
+    "start": "node src/index.js"
   },
   "author": "Avinash Khanduri",
   "license": "ISC",
