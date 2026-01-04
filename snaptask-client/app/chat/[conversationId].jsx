@@ -150,7 +150,7 @@ const ChatScreen = () => {
     const messageContent = inputText.trim();
     setInputText('');
     setIsSending(true);
-
+    console.log("sendMssage hit------")
     try {
       socket.emit('send_message', {
         conversationId,

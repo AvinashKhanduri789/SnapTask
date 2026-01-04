@@ -14,7 +14,8 @@ export const SocketProvider = ({ children }) => {
     if (!userData?.token) return;   
     if (socket) return;
 
-    const s = io("http://10.191.99.30:4002", {
+// http://10.191.99.30:4002
+    const s = io("https://snaptask-chat.onrender.com", {
       auth: {
         token: userData.token,      
       },
