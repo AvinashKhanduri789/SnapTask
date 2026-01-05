@@ -11,8 +11,8 @@ Android Preview Build
 You can directly download and install the latest Android preview build using the link below.
 This is the same build I use for testing the app on real devices:
 
-Download Build:
-https://expo.dev/accounts/avinash_khanduri.dev/projects/HelpHive_client/builds/08033560-d01f-415d-905c-330d49f4fd48
+Download App:
+https://expo.dev/accounts/avinash_khanduri.dev/projects/HelpHive_client/builds/92ddcd60-be89-45d7-a6e0-1d274b9eb834
 
 How SnapTask Works
 

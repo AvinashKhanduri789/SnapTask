@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "HelpHive_client",
+    "name": "SnapTask",
     "slug": "HelpHive_client",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/HelpHive.png",
+    "icon": "./assets/images/snapTask.png",
     "scheme": "helphiveclient",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -19,9 +19,9 @@
       "windowSoftInputMode": "adjustResize",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/HelpHive.png",
-        "backgroundImage": "./assets/images/HelpHive.png",
-        "monochromeImage": "./assets/images/HelpHive.png",
+        "foregroundImage": "./assets/images/snapTask.png",
+        "backgroundImage": "./assets/images/snapTask.png",
+        "monochromeImage": "./assets/images/snapTask.png"
       },
       "googleServicesFile":"./app/google-services.json",
       "edgeToEdgeEnabled": true,
@@ -30,14 +30,14 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/HelpHive.png",
+      "favicon": "./assets/images/snapTask.png",
       "bundler": "metro"
     },
     "plugins": [
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Snaptask to access your location always",
+          "locationAlwaysAndWhenInUsePermission": "Allow Snaptask to access your location always"
           
         }
       ],
@@ -45,7 +45,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/HelpHive.png",
+          "image": "./assets/images/snapTask.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
